@@ -32,6 +32,48 @@ void insert_row(int id, char* name) {
     root = insert_in_tree(root, id, name);
 }
 
+// Fonction pour trouver le successeur in-order
+TreeNode* find_min(TreeNode* node) {
+    while (node->left != NULL) {
+        node = node->left;
+    }
+    return node;
+}
+
+// Fonction pour supprimer un nœud de l'arbre
+TreeNode* delete_in_tree(TreeNode* node, int id) {
+    if (node == NULL) return node;
+    
+    if (id < node->id) {
+        node->left = delete_in_tree(node->left, id);
+    } else if (id > node->id) {
+        node->right = delete_in_tree(node->right, id);
+    } else {
+        // Nœud trouvé
+        if (node->left == NULL) {
+            TreeNode* temp = node->right;
+            free(node);
+            return temp;
+        } else if (node->right == NULL) {
+            TreeNode* temp = node->left;
+            free(node);
+            return temp;
+        }
+        
+        TreeNode* temp = find_min(node->right);
+        node->id = temp->id;
+        strcpy(node->name, temp->name);
+        node->right = delete_in_tree(node->right, temp->id);
+    }
+    
+    return node;
+}
+
+// Interface pour supprimer une ligne
+void delete_row(int id) {
+    root = delete_in_tree(root, id);
+}
+
 // Fonction pour parcourir l'arbre en ordre croissant
 void traverse_tree(TreeNode* node) {
     if (node == NULL) return;
