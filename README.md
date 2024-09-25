@@ -28,6 +28,7 @@ Provide some tests (assert for now)
 other if you have ideas)
 - Do some disk persistence
 
+
 Bonus – Code audit and “quality”
 
 - One of the best way to find bugs (whether security or not) is to
@@ -46,3 +47,22 @@ rendu : 17/11 23h59
 
 
 ## Structure du Projet 
+
+Ce projet implémente une base de données simple utilisant une structure d'arbre binaire pour stocker des lignes avec des commandes de type SQL. 
+
+Il permet d'effectuer des opérations de base telles que l'insertion, la sélection, la suppression et la recherche de données. 
+
+De plus, il offre une ** persistance des données sur disque**  pour garantir que les informations sont conservées.
+
+ - Commandes de base comme `insert`, `select`, `delete` et `search` disponibles dans un environnement REPL
+
+
+## Commandes disponibles dans le REPL
+
+| Commande                       | Syntaxe                | Exemple            | Description                                          |
+|--------------------------------|-----------------------|--------------------|------------------------------------------------------|
+| Insérer une ligne              | `insert <id> <nom>`   | `insert 1 Alice`   | Ajoute une nouvelle ligne avec un ID et un nom      |
+| Sélectionner toutes les lignes  | `select`              | `select`           | Affiche toutes les lignes de la base de données     |
+| Rechercher une ligne par ID    | `search <id>`         | `search 1`         | Recherche et affiche une ligne spécifique par son ID |
+| Supprimer une ligne par ID     | `delete <id>`         | `delete 1`         | Supprime une ligne spécifique par son ID             |
+| Quitter et sauvegarder         | `.exit`               | `.exit`            | Sauvegarde l'arbre dans `db_save.txt` et quitte le programme |
