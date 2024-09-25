@@ -37,33 +37,33 @@ typedef enum {
 typedef enum {
     STATEMENT_INSERT,
     STATEMENT_SELECT,
-    STATEMENT_DELETE,  // Ajout de delete
-    STATEMENT_SEARCH   // Ajout de search
+    STATEMENT_DELETE,  
+    STATEMENT_SEARCH   
 } StatementType;
 
-// Structure pour représenter une commande
+// Pour représenter la commande
 typedef struct {
     StatementType type;
     int id;
     char name[255];
 } Statement;
 
-// Structure pour gérer l'entrée utilisateur dans le REPL
+// gérer l'entrée utilisateur dans le REPL
 typedef struct {
     char* buffer;
     size_t buffer_length;
     size_t input_length;
 } InputBuffer;
 
-// Fonction pour afficher l'invite de commande
+// Fonction pour afficher l'invite de commande avec des couleurs
 void print_prompt() {
-    printf("db > ");
+    printf("\033[33mdb > \033[0m");
 }
 
 // Fonction pour créer et initialiser un buffer d'entrée
 InputBuffer* new_input_buffer() {
     InputBuffer* input_buffer = (InputBuffer*)malloc(sizeof(InputBuffer));
-    input_buffer->buffer = (char*)malloc(1024 * sizeof(char));  // Taille du buffer à 1024 octets
+    input_buffer->buffer = (char*)malloc(1024 * sizeof(char)); 
     input_buffer->buffer_length = 1024;
     input_buffer->input_length = 0;
     return input_buffer;
@@ -72,11 +72,11 @@ InputBuffer* new_input_buffer() {
 // Fonction pour lire l'entrée utilisateur
 void read_input(InputBuffer* input_buffer) {
     if (fgets(input_buffer->buffer, input_buffer->buffer_length, stdin) == NULL) {
-        printf("Error reading input\n");
+        printf("\033[31mError reading input\033[0m\n");  
         exit(EXIT_FAILURE);
     }
-    input_buffer->input_length = strlen(input_buffer->buffer) - 1;  // Retirer la nouvelle ligne
-    input_buffer->buffer[input_buffer->input_length] = '\0';  // Terminer la chaîne de caractères
+    input_buffer->input_length = strlen(input_buffer->buffer) - 1;  
+    input_buffer->buffer[input_buffer->input_length] = '\0';  
 }
 
 // Fonction pour fermer le buffer d'entrée et libérer la mémoire
@@ -124,38 +124,39 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement)
     return PREPARE_UNRECOGNIZED_STATEMENT;
 }
 
-// Fonction pour exécuter une commande SQL
+// Fonction pour exécuter une commande SQL avec des couleurs
 void execute_statement(Statement* statement) {
     switch (statement->type) {
         case (STATEMENT_INSERT):
             insert_row(statement->id, statement->name);
-            printf("Inserted (%d, %s)\n", statement->id, statement->name);
+            printf("\033[32mInserted (%d, %s)\033[0m\n", statement->id, statement->name); 
             break;
 
         case (STATEMENT_SELECT):
+            printf("\033[34m");  
             select_row();
+            printf("\033[0m");   
             break;
 
         case (STATEMENT_DELETE):
             delete_row(statement->id);
-            printf("Deleted row with ID %d\n", statement->id);
+            printf("\033[31mDeleted row with ID %d\033[0m\n", statement->id);  
             break;
 
         case (STATEMENT_SEARCH):
             {
                 TreeNode* node = search_row(statement->id);
                 if (node != NULL) {
-                    printf("Found: (%d, %s)\n", node->id, node->name);
+                    printf("\033[32mFound: (%d, %s)\033[0m\n", node->id, node->name);  
                 } else {
-                    printf("No row found with ID %d\n", statement->id);
+                    printf("\033[31mNo row found with ID %d\033[0m\n", statement->id);  
                 }
             }
             break;
     }
 }
 
-
-// Boucle principale du REPL (Read-Eval-Print Loop)
+// Boucle principale du REPL avec des couleurs
 void repl(void) {
     InputBuffer* input_buffer = new_input_buffer();
     
@@ -163,7 +164,6 @@ void repl(void) {
         print_prompt();
         read_input(input_buffer);
 
-        // Traiter les commandes meta (comme .exit)
         if (input_buffer->buffer[0] == '.') {
             if (strcmp(input_buffer->buffer, ".exit") == 0) {
                 FILE *file = fopen("db_save.txt", "w");
@@ -174,7 +174,7 @@ void repl(void) {
                 close_input_buffer(input_buffer);
                 exit(EXIT_SUCCESS);
             } else {
-                printf("Unrecognized command '%s'\n", input_buffer->buffer);
+                printf("\033[31mUnrecognized command '%s'\033[0m\n", input_buffer->buffer);  
             }
         } else {
             Statement statement;
@@ -183,10 +183,10 @@ void repl(void) {
                     execute_statement(&statement);
                     break;
                 case PREPARE_SYNTAX_ERROR:
-                    printf("Syntax error. Could not parse statement.\n");
+                    printf("\033[31mSyntax error. Could not parse statement.\033[0m\n"); 
                     break;
                 case PREPARE_UNRECOGNIZED_STATEMENT:
-                    printf("Unrecognized keyword at start of '%s'.\n", input_buffer->buffer);
+                    printf("\033[31mUnrecognized keyword at start of '%s'.\033[0m\n", input_buffer->buffer);
                     break;
             }
         }
