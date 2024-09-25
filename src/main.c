@@ -1,14 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "repl.c"
-#include <stdbool.h>
-#include <string.h>
+#include "../include/repl.h"
 
+int main(int argc, char* argv[], char* envp[]) {
+    (void)argc;
+    (void)argv;
+    (void)envp;
 
-int main(int argc, char* argv[], char* envp[]){
-  
-  repl(); 
-  // Start the REPL (Read Eval Print Loop)
-  return 0;
-  
+    repl();  // Démarrer la boucle REPL
+    return 0;
 }
+
