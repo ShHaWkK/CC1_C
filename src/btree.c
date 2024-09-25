@@ -91,6 +91,21 @@ void select_row() {
     }
 }
 
+// Fonction pour rechercher un nœud dans l'arbre
+TreeNode* search_row(int id) {
+    TreeNode* current = root;
+    while (current != NULL) {
+        if (id == current->id) {
+            return current;
+        } else if (id < current->id) {
+            current = current->left;
+        } else {
+            current = current->right;
+        }
+    }
+    return NULL;
+}
+
 // Fonction pour sauvegarder l'arbre binaire dans un fichier
 void save_tree(FILE *file, TreeNode *node) {
     if (node == NULL) return;
