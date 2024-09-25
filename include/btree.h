@@ -11,10 +11,11 @@
 * - load_tree: qui permet de charger l'arbre depuis un fichier
 * ---------------------------------------------------------------------------------
 *
-*/#ifndef BTREE_H
+*/
+#ifndef BTREE_H
 #define BTREE_H
 
-#include <stdio.h>  // Pour le type FILE
+#include <stdio.h>
 
 // Déclaration de la structure TreeNode
 typedef struct TreeNode {
@@ -26,6 +27,8 @@ typedef struct TreeNode {
 
 // Prototypes des fonctions pour manipuler l'arbre binaire
 void insert_row(int id, char* name);
+void delete_row(int id);
+TreeNode* search_row(int id);
 void select_row();
 void save_tree(FILE *file, TreeNode *node);
 void load_tree(const char *filename);
