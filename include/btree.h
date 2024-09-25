@@ -7,16 +7,30 @@
 * Les fonctions sont:
 * - insert_row: qui permet d'insérer une ligne dans l'arbre
 * - select_row: qui permet de selectionner toutes les lignes de l'arbre
+* - save_tree: qui permet de sauvegarder l'arbre dans un fichier
+* - load_tree: qui permet de charger l'arbre depuis un fichier
 * ---------------------------------------------------------------------------------
 *
-*/
-
-#ifndef BTREE_H
+*/#ifndef BTREE_H
 #define BTREE_H
 
-// Fonctions qui sert à manipuler la base de données
+#include <stdio.h>  // Pour le type FILE
 
+// Déclaration de la structure TreeNode
+typedef struct TreeNode {
+    int id;
+    char name[255];
+    struct TreeNode* left;
+    struct TreeNode* right;
+} TreeNode;
+
+// Prototypes des fonctions pour manipuler l'arbre binaire
 void insert_row(int id, char* name);
 void select_row();
+void save_tree(FILE *file, TreeNode *node);
+void load_tree(const char *filename);
 
-#endif
+// Déclaration de la racine de l'arbre binaire (externe)
+extern TreeNode* root;
+
+#endif  // BTREE_H
