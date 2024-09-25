@@ -1,29 +1,27 @@
-# Makefile
-
-# Compilateur et options de compilation
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c99 -g -Iinclude/
-
-# Fichiers source et objets
-SRC = src/main.c src/repl.c src/btree.c src/db.c src/test.c
-OBJ = $(SRC:.c=.o)
-
-# Nom de l'exécutable
+OBJ = src/main.o src/repl.o src/btree.o src/db.o src/test.o
 TARGET = class_db
 
-# Règle par défaut pour compiler tout le projet
 all: $(TARGET)
 
-# Compilation de l'exécutable final
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $(OBJ)
 
-# Compilation des fichiers objets
-%.o: %.c
+src/main.o: src/main.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Nettoyage des fichiers compilés
-clean:
-	rm -f $(SRCDIR)/*.o $(TARGET)
+src/repl.o: src/repl.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: all clean
+src/btree.o: src/btree.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+src/db.o: src/db.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+src/test.o: src/test.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f src/*.o $(TARGET)
