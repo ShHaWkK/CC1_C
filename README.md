@@ -52,10 +52,10 @@ Ce projet implémente une base de données simple utilisant une structure d'arbr
 
 Il permet d'effectuer des opérations de base telles que l'insertion, la sélection, la suppression et la recherche de données. 
 
-De plus, il offre une ** persistance des données sur disque**  pour garantir que les informations sont conservées.
+De plus, il offre une **persistance des données sur disque**  pour garantir que les informations sont conservées.
 
- - Commandes de base comme `insert`, `select`, `delete` et `search` disponibles dans un environnement REPL
-
+ - **Commandes de base** comme `insert`, `select`, `delete` et `search` disponibles dans un environnement REPL
+ - **Sortie colorée** : Retour interactif en couleur pour **améliorer l'expérience utilisateur** (par exemple, vert pour les insertions réussies, rouge pour les erreurs).
 
 ## Commandes disponibles dans le REPL
 
