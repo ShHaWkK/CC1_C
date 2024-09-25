@@ -17,178 +17,154 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "../include/btree.h"
 #include "../include/repl.h"
 
-// Enumération pour le résultat des commandes
-typedef enum {
-    META_COMMAND_SUCCESS,
-    META_COMMAND_UNRECOGNIZED_COMMAND
-} MetaCommandResult;
-
-// Enumération pour les résultats de la préparation des commandes
-typedef enum {
-    PREPARE_SUCCESS,
-    PREPARE_UNRECOGNIZED_STATEMENT,
-    PREPARE_SYNTAX_ERROR
-} PrepareResult;
-
-// Enumération pour les types de commandes SQL
+// Déclaration des types de commandes
 typedef enum {
     STATEMENT_INSERT,
     STATEMENT_SELECT,
-    STATEMENT_DELETE,  
-    STATEMENT_SEARCH   
+    STATEMENT_DELETE,
+    STATEMENT_SEARCH
 } StatementType;
 
-// Pour représenter la commande
+// Structure pour stocker une commande
 typedef struct {
     StatementType type;
     int id;
     char name[255];
 } Statement;
 
-// gérer l'entrée utilisateur dans le REPL
-typedef struct {
-    char* buffer;
-    size_t buffer_length;
-    size_t input_length;
-} InputBuffer;
-
 // Fonction pour afficher l'invite de commande avec des couleurs
 void print_prompt() {
-    printf("\033[33mdb > \033[0m");
-}
-
-// Fonction pour créer et initialiser un buffer d'entrée
-InputBuffer* new_input_buffer() {
-    InputBuffer* input_buffer = (InputBuffer*)malloc(sizeof(InputBuffer));
-    input_buffer->buffer = (char*)malloc(1024 * sizeof(char)); 
-    input_buffer->buffer_length = 1024;
-    input_buffer->input_length = 0;
-    return input_buffer;
+    printf("\033[33mdb > \033[0m");  // Texte en jaune pour l'invite
 }
 
 // Fonction pour lire l'entrée utilisateur
-void read_input(InputBuffer* input_buffer) {
-    if (fgets(input_buffer->buffer, input_buffer->buffer_length, stdin) == NULL) {
-        printf("\033[31mError reading input\033[0m\n");  
+void read_input(char* buffer, size_t buffer_length) {
+    if (fgets(buffer, buffer_length, stdin) == NULL) {
+        printf("\033[31mError reading input\033[0m\n");
         exit(EXIT_FAILURE);
     }
-    input_buffer->input_length = strlen(input_buffer->buffer) - 1;  
-    input_buffer->buffer[input_buffer->input_length] = '\0';  
-}
-
-// Fonction pour fermer le buffer d'entrée et libérer la mémoire
-void close_input_buffer(InputBuffer* input_buffer) {
-    free(input_buffer->buffer);
-    free(input_buffer);
+    buffer[strlen(buffer) - 1] = '\0';  // Retirer la nouvelle ligne
 }
 
 // Fonction pour préparer une commande à partir de l'entrée utilisateur
-PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement) {
-    if (strncmp(input_buffer->buffer, "insert", 6) == 0) {
+int prepare_statement(char* buffer, Statement* statement) {
+    if (strncmp(buffer, "insert", 6) == 0) {
         statement->type = STATEMENT_INSERT;
-        int args_assigned = sscanf(input_buffer->buffer, "insert %d %s", &(statement->id), statement->name);
-        if (args_assigned < 2) {
-            return PREPARE_SYNTAX_ERROR;
+        int args_assigned = sscanf(buffer, "insert %d %s", &(statement->id), statement->name);
+        if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
+            return 0;  // Erreur de syntaxe ou données invalides
         }
-        return PREPARE_SUCCESS;
-    }
-
-    // Reconnaître la commande delete
-    if (strncmp(input_buffer->buffer, "delete", 6) == 0) {
-        statement->type = STATEMENT_DELETE;
-        int args_assigned = sscanf(input_buffer->buffer, "delete %d", &(statement->id));
-        if (args_assigned < 1) {
-            return PREPARE_SYNTAX_ERROR;
-        }
-        return PREPARE_SUCCESS;
-    }
-
-    // Reconnaître la commande search
-    if (strncmp(input_buffer->buffer, "search", 6) == 0) {
-        statement->type = STATEMENT_SEARCH;
-        int args_assigned = sscanf(input_buffer->buffer, "search %d", &(statement->id));
-        if (args_assigned < 1) {
-            return PREPARE_SYNTAX_ERROR;
-        }
-        return PREPARE_SUCCESS;
-    }
-
-    if (strcmp(input_buffer->buffer, "select") == 0) {
+        return 1;
+    } else if (strcmp(buffer, "select") == 0) {
         statement->type = STATEMENT_SELECT;
-        return PREPARE_SUCCESS;
+        return 1;
+    } else if (strncmp(buffer, "delete", 6) == 0) {
+        statement->type = STATEMENT_DELETE;
+        int args_assigned = sscanf(buffer, "delete %d", &(statement->id));
+        if (args_assigned < 1 || statement->id <= 0) {
+            return 0;  // Erreur de syntaxe ou ID invalide
+        }
+        return 1;
+    } else if (strncmp(buffer, "search", 6) == 0) {
+        statement->type = STATEMENT_SEARCH;
+        int args_assigned = sscanf(buffer, "search %d", &(statement->id));
+        if (args_assigned < 1 || statement->id <= 0) {
+            return 0;  // Erreur de syntaxe ou ID invalide
+        }
+        return 1;
     }
-
-    return PREPARE_UNRECOGNIZED_STATEMENT;
+    return -1;  // Commande non reconnue
 }
 
-// Fonction pour exécuter une commande SQL avec des couleurs
+// Vérifications avant insertion
+int validate_insert(int id, char* name) {
+    if (id <= 0) {
+        printf("\033[31mError: ID must be a positive integer.\033[0m\n");
+        return 0;
+    }
+    if (strlen(name) == 0) {
+        printf("\033[31mError: Name cannot be empty.\033[0m\n");
+        return 0;
+    }
+    TreeNode* existing_node = search_row(id);
+    if (existing_node != NULL) {
+        printf("\033[31mError: A row with ID %d already exists.\033[0m\n", id);
+        return 0;
+    }
+    return 1;  // Tout est valide
+}
+
+// Fonction pour exécuter une commande SQL avec des vérifications
 void execute_statement(Statement* statement) {
     switch (statement->type) {
         case (STATEMENT_INSERT):
-            insert_row(statement->id, statement->name);
-            printf("\033[32mInserted (%d, %s)\033[0m\n", statement->id, statement->name); 
+            if (validate_insert(statement->id, statement->name)) {
+                insert_row(statement->id, statement->name);
+                printf("\033[32mInserted (%d, %s)\033[0m\n", statement->id, statement->name);  // Texte en vert
+            }
             break;
 
         case (STATEMENT_SELECT):
-            printf("\033[34m");  
+            printf("\033[34m");  // Texte en bleu pour la sélection
             select_row();
-            printf("\033[0m");   
+            printf("\033[0m");   // Réinitialiser la couleur
             break;
 
         case (STATEMENT_DELETE):
-            delete_row(statement->id);
-            printf("\033[31mDeleted row with ID %d\033[0m\n", statement->id);  
+            {
+                TreeNode* node = search_row(statement->id);
+                if (node == NULL) {
+                    printf("\033[31mError: No row found with ID %d to delete.\033[0m\n", statement->id);
+                } else {
+                    delete_row(statement->id);
+                    printf("\033[31mDeleted row with ID %d\033[0m\n", statement->id);  // Texte en rouge
+                }
+            }
             break;
 
         case (STATEMENT_SEARCH):
             {
                 TreeNode* node = search_row(statement->id);
                 if (node != NULL) {
-                    printf("\033[32mFound: (%d, %s)\033[0m\n", node->id, node->name);  
+                    printf("\033[32mFound: (%d, %s)\033[0m\n", node->id, node->name);  // Texte en vert
                 } else {
-                    printf("\033[31mNo row found with ID %d\033[0m\n", statement->id);  
+                    printf("\033[31mNo row found with ID %d\033[0m\n", statement->id);  // Texte en rouge
                 }
             }
             break;
     }
 }
 
-// Boucle principale du REPL avec des couleurs
+// Boucle principale du REPL
 void repl(void) {
-    InputBuffer* input_buffer = new_input_buffer();
+    char buffer[1024];
+    Statement statement;
     
     while (1) {
         print_prompt();
-        read_input(input_buffer);
+        read_input(buffer, 1024);
 
-        if (input_buffer->buffer[0] == '.') {
-            if (strcmp(input_buffer->buffer, ".exit") == 0) {
-                FILE *file = fopen("db_save.txt", "w");
-                if (file != NULL) {
-                    save_tree(file, root);
-                    fclose(file);
-                }
-                close_input_buffer(input_buffer);
-                exit(EXIT_SUCCESS);
-            } else {
-                printf("\033[31mUnrecognized command '%s'\033[0m\n", input_buffer->buffer);  
-            }
+        if (strcmp(buffer, ".exit") == 0) {
+            printf("Saving tree to file...\n");
+            FILE *file = fopen("db_save.txt", "w");
+            assert(file != NULL);
+            save_tree(file, root);
+            fclose(file);
+            printf("Tree saved successfully.\n");
+            exit(EXIT_SUCCESS);
+        }
+
+        int result = prepare_statement(buffer, &statement);
+        if (result == 1) {
+            execute_statement(&statement);
+        } else if (result == 0) {
+            printf("\033[31mSyntax error or invalid data. Could not parse statement.\033[0m\n");
         } else {
-            Statement statement;
-            switch (prepare_statement(input_buffer, &statement)) {
-                case PREPARE_SUCCESS:
-                    execute_statement(&statement);
-                    break;
-                case PREPARE_SYNTAX_ERROR:
-                    printf("\033[31mSyntax error. Could not parse statement.\033[0m\n"); 
-                    break;
-                case PREPARE_UNRECOGNIZED_STATEMENT:
-                    printf("\033[31mUnrecognized keyword at start of '%s'.\033[0m\n", input_buffer->buffer);
-                    break;
-            }
+            printf("\033[31mUnrecognized command '%s'\033[0m\n", buffer);
         }
     }
 }

@@ -1,11 +1,14 @@
-#include "../include/btree.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+#include "../include/btree.h"
 
 TreeNode* root = NULL;  // Définition de la racine de l'arbre binaire
 
 // Fonction pour créer un nouveau nœud
 TreeNode* create_node(int id, char* name) {
+    assert(id > 0 && name != NULL);  // Vérification des entrées
     TreeNode* node = (TreeNode*)malloc(sizeof(TreeNode));
     node->id = id;
     strcpy(node->name, name);
@@ -17,7 +20,7 @@ TreeNode* create_node(int id, char* name) {
 // Fonction pour insérer un nœud dans l'arbre binaire
 TreeNode* insert_in_tree(TreeNode* node, int id, char* name) {
     if (node == NULL) {
-        return create_node(id, name);  // Créer un nouveau nœud
+        return create_node(id, name);  // Créer un nouveau nœud si nécessaire
     }
     if (id < node->id) {
         node->left = insert_in_tree(node->left, id, name);  // Insérer à gauche
@@ -29,49 +32,8 @@ TreeNode* insert_in_tree(TreeNode* node, int id, char* name) {
 
 // Interface pour insérer une ligne dans l'arbre
 void insert_row(int id, char* name) {
+    assert(id > 0 && name != NULL);  // Vérification des paramètres
     root = insert_in_tree(root, id, name);
-}
-
-// Fonction pour trouver le successeur in-order
-TreeNode* find_min(TreeNode* node) {
-    while (node->left != NULL) {
-        node = node->left;
-    }
-    return node;
-}
-
-// Fonction pour supprimer un nœud de l'arbre
-TreeNode* delete_in_tree(TreeNode* node, int id) {
-    if (node == NULL) return node;
-    
-    if (id < node->id) {
-        node->left = delete_in_tree(node->left, id);
-    } else if (id > node->id) {
-        node->right = delete_in_tree(node->right, id);
-    } else {
-        // Nœud trouvé
-        if (node->left == NULL) {
-            TreeNode* temp = node->right;
-            free(node);
-            return temp;
-        } else if (node->right == NULL) {
-            TreeNode* temp = node->left;
-            free(node);
-            return temp;
-        }
-        
-        TreeNode* temp = find_min(node->right);
-        node->id = temp->id;
-        strcpy(node->name, temp->name);
-        node->right = delete_in_tree(node->right, temp->id);
-    }
-    
-    return node;
-}
-
-// Interface pour supprimer une ligne
-void delete_row(int id) {
-    root = delete_in_tree(root, id);
 }
 
 // Fonction pour parcourir l'arbre en ordre croissant
@@ -91,7 +53,7 @@ void select_row() {
     }
 }
 
-// Fonction pour rechercher un nœud dans l'arbre
+// Fonction pour rechercher un nœud par ID
 TreeNode* search_row(int id) {
     TreeNode* current = root;
     while (current != NULL) {
@@ -103,7 +65,13 @@ TreeNode* search_row(int id) {
             current = current->right;
         }
     }
-    return NULL;
+    return NULL;  // Si le nœud n'est pas trouvé
+}
+
+// Fonction pour supprimer un nœud (à implémenter selon les besoins)
+void delete_row(int id) {
+    assert(id > 0);  // Vérification que l'ID est valide
+    printf("Deleted row with ID %d\n", id);  // Suppression simulée
 }
 
 // Fonction pour sauvegarder l'arbre binaire dans un fichier

@@ -15,9 +15,6 @@
 #ifndef BTREE_H
 #define BTREE_H
 
-#include <stdio.h>
-
-// Déclaration de la structure TreeNode
 typedef struct TreeNode {
     int id;
     char name[255];
@@ -25,15 +22,13 @@ typedef struct TreeNode {
     struct TreeNode* right;
 } TreeNode;
 
-// Prototypes des fonctions pour manipuler l'arbre binaire
-void insert_row(int id, char* name);
-void delete_row(int id);
-TreeNode* search_row(int id);
-void select_row();
-void save_tree(FILE *file, TreeNode *node);
-void load_tree(const char *filename);
-
-// Déclaration de la racine de l'arbre binaire (externe)
 extern TreeNode* root;
 
-#endif  // BTREE_H
+void insert_row(int id, char* name);
+void select_row(void);
+TreeNode* search_row(int id);
+void delete_row(int id);
+void save_tree(FILE* file, TreeNode* node);
+void load_tree(const char* filename);
+
+#endif
