@@ -37,9 +37,11 @@ typedef struct {
     char name[255];
 } Statement;
 
-// Fonction pour afficher l'invite de commande avec des couleurs
+/*
+* Affiche le db 
+*/
 void print_prompt() {
-    printf("\033[36mdb > \033[0m");  // Texte en cyan pour l'invite
+    printf("\033[36mdb > \033[0m");
 }
 
 
@@ -52,13 +54,16 @@ void read_input(char* buffer, size_t buffer_length) {
     buffer[strlen(buffer) - 1] = '\0';  
 }
 
-// Fonction pour préparer une commande à partir de l'entrée utilisateur
+/*
+*  Fonction prepare_statement mettre les commandes dans une structure
+*/
 int prepare_statement(char* buffer, Statement* statement) {
     if (strncmp(buffer, "insert", 6) == 0) {
+        /* Si la commande est insert, on extrait l'ID et le nom */
         statement->type = STATEMENT_INSERT;
         int args_assigned = sscanf(buffer, "insert %d %s", &(statement->id), statement->name);
         if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
-            return 0;  // Erreur de syntaxe ou données invalides
+            return 0; 
         }
         return 1;
     } else if (strcmp(buffer, "select") == 0) {
@@ -68,14 +73,14 @@ int prepare_statement(char* buffer, Statement* statement) {
         statement->type = STATEMENT_DELETE;
         int args_assigned = sscanf(buffer, "delete %d", &(statement->id));
         if (args_assigned < 1 || statement->id <= 0) {
-            return 0;  // Erreur de syntaxe ou ID invalide
+            return 0;  
         }
         return 1;
     } else if (strncmp(buffer, "search", 6) == 0) {
         statement->type = STATEMENT_SEARCH;
         int args_assigned = sscanf(buffer, "search %d", &(statement->id));
         if (args_assigned < 1 || statement->id <= 0) {
-            return 0;  // Erreur de syntaxe ou ID invalide
+            return 0; 
         }
         return 1;
     } else if (strncmp(buffer, "update", 6) == 0) {
@@ -89,7 +94,7 @@ int prepare_statement(char* buffer, Statement* statement) {
         statement->type = STATEMENT_HELP;
         return 1;
     }
-    return -1;  // Commande non reconnue
+    return -1; 
 }
 
 /*
@@ -162,7 +167,7 @@ void execute_statement(Statement* statement) {
                     strcpy(node->name, statement->name);
                     printf("\033[32m✓ Modification (%d, %s)\033[0m\n", node->id, node->name);
                 } else {
-                    printf("\033[31m✗ Error: No row found with ID %d to update.\033[0m\n", statement->id);
+                    printf("\033[31m✗ Erreur : Aucune ligne trouvée avec l'ID %d à mettre à jour.\033[0m\n", statement->id);
                 }
             }
             break;
