@@ -23,7 +23,6 @@ typedef struct TreeNode {
 } TreeNode;
 
 extern TreeNode* root;
-extern TreeNode** index_table;  // Ajout de l'index pour accélérer les recherches
 
 void insert_row(int id, char* name);
 void select_row(void);
@@ -31,5 +30,7 @@ TreeNode* search_row(int id);
 void delete_row(int id);
 void save_tree(FILE* file, TreeNode* node);
 void load_tree(const char* filename);
+TreeNode* find_min(TreeNode* node);
+TreeNode* delete_node(TreeNode* root, int id);
 
 #endif
