@@ -12,15 +12,15 @@
 *   - load_tree: qui permet de charger l'arbre depuis un fichier
 
 * ---------------------------------------------------------------------------------
-*/#include <stdio.h>
+*/
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include "../include/btree.h"
-#include "../include/repl.h"
 #include "../include/utils.h"
 
-// Déclaration des types de commandes
+// Structure pour stocker une commande
 typedef enum {
     STATEMENT_INSERT,
     STATEMENT_SELECT,
@@ -30,7 +30,6 @@ typedef enum {
     STATEMENT_HELP
 } StatementType;
 
-// Structure pour stocker une commande
 typedef struct {
     StatementType type;
     int id;
@@ -52,11 +51,11 @@ void read_input(char* buffer, size_t buffer_length) {
         printf("\033[31m✗ Error reading input\033[0m\n");
         exit(EXIT_FAILURE);
     }
-    buffer[strlen(buffer) - 1] = '\0';  // Retirer la nouvelle ligne
+    buffer[strlen(buffer) - 1] = '\0';
 }
 
 /*
-*  Fonction prepare_statement pour préparer une commande avec WHERE supporté
+*  Fonction prepare_statement pour préparer une commande avec WHERE
 */
 int prepare_statement(char* buffer, Statement* statement) {
     statement->has_where = 0;
@@ -65,7 +64,7 @@ int prepare_statement(char* buffer, Statement* statement) {
         statement->type = STATEMENT_INSERT;
         int args_assigned = sscanf(buffer, "insert %d %s", &(statement->id), statement->name);
         if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
-            return 0;  // Erreur de syntaxe
+            return 0; 
         }
         return 1;
     } else if (strncmp(buffer, "select", 6) == 0) {
@@ -84,7 +83,14 @@ int prepare_statement(char* buffer, Statement* statement) {
         statement->type = STATEMENT_DELETE;
         int args_assigned = sscanf(buffer, "delete %d", &(statement->id));
         if (args_assigned < 1 || statement->id <= 0) {
-            return 0;  // Erreur de syntaxe
+            return 0;
+        }
+        return 1;
+    } else if (strncmp(buffer, "search", 6) == 0) {
+        statement->type = STATEMENT_SEARCH;
+        int args_assigned = sscanf(buffer, "search %d", &(statement->id));
+        if (args_assigned < 1 || statement->id <= 0) {
+            return 0;  
         }
         return 1;
     } else if (strncmp(buffer, "update", 6) == 0) {
@@ -99,7 +105,7 @@ int prepare_statement(char* buffer, Statement* statement) {
         return 1;
     }
 
-    return -1;  // Commande non reconnue
+    return -1;
 }
 
 /*
@@ -110,6 +116,7 @@ void print_help() {
     printf("\033[32minsert <id> <name>\033[0m   : Insérer une nouvelle ligne\n");
     printf("\033[32mselect\033[0m              : Afficher toutes les lignes\n");
     printf("\033[32mselect where id = <id>\033[0m : Sélectionner une ligne avec un id spécifique\n");
+    printf("\033[32msearch <id>\033[0m         : Rechercher une ligne avec un id spécifique\n");
     printf("\033[32mdelete <id>\033[0m         : Supprimer une ligne avec l'ID\n");
     printf("\033[32mupdate <id> <name>\033[0m  : Mettre à jour le nom d'une ligne avec l'ID\n");
     printf("\033[32m.exit\033[0m               : Sauvegarder et quitter\n");
@@ -119,14 +126,14 @@ void print_help() {
 // Confirmation de suppression
 int confirm_delete(int id) {
     char confirmation[10];
-    printf("\033[31mEtes-vous sur de vouloir supprimer l'ID %d ? (y/n): \033[0m", id);
+    printf("\033[31mEtes-vous sûr de vouloir supprimer l'ID %d ? (y/n): \033[0m", id);
     fgets(confirmation, 10, stdin);
     return (confirmation[0] == 'y' || confirmation[0] == 'Y');
 }
 
 // Fonction pour exécuter une commande SQL avec des vérifications
 void execute_statement(Statement* statement) {
-    TreeNode* node = NULL;  // Déclarez la variable avant la première instruction du bloc
+    TreeNode* node = NULL;
 
     switch (statement->type) {
         case STATEMENT_INSERT:
@@ -145,7 +152,16 @@ void execute_statement(Statement* statement) {
                     printf("\033[31m✗ No row found with ID %d\033[0m\n", statement->where_id);
                 }
             } else {
-                select_row();  // Afficher toutes les lignes
+                select_row();
+            }
+            break;
+
+        case STATEMENT_SEARCH:
+            node = search_row(statement->id);
+            if (node) {
+                printf("\033[32m✓ Found: (%d, %s)\033[0m\n", node->id, node->name);
+            } else {
+                printf("\033[31m✗ No row found with ID %d\033[0m\n", statement->id);
             }
             break;
 
