@@ -67,7 +67,26 @@ De plus, il offre une **persistance des données sur disque**  pour garantir que
 | Supprimer une ligne par ID     | `delete <id>`         | `delete 1`         | Supprime une ligne spécifique par son ID             |
 | Quitter et sauvegarder         | `.exit`               | `.exit`            | Sauvegarde l'arbre dans `db_save.txt` et quitte le programme |
 
+## Structure du Projet
 
+- **src/** : Contient les fichiers source
+  - `btree.c` : Implémentation de l'arbre binaire
+  - `repl.c` : Interface en ligne de commande (REPL)
+  - `utils.c` : Fonctions utilitaires
+- **include/** : Contient les fichiers d'en-tête
+  - `btree.h`
+  - `utils.h`
+- **tests/** : Tests unitaires et d'intégration
+- **Makefile** : Pour la compilation et les tests
+- `db_save.txt` : Fichier de persistance des données
+
+### Compilation
+```bash
+make
+```
+```bash
+./class_db.exe
+```
 
 ## Explications
 
@@ -75,8 +94,9 @@ De plus, il offre une **persistance des données sur disque**  pour garantir que
 
 ### Fonction pour delete : 
 > [!NOTE]
-> - ```find_min``` : Cette fonction cherche le nœud avec la plus petite valeur dans un sous-arbre en se déplaçant vers la gauche jusqu'à ce qu'il n'y ait plus de nœuds à gauche.
-> - 'delete_node': Cette fonction supprime un nœud d'un arbre binaire de recherche. Elle gère trois cas : si le nœud a aucun enfant, un enfant, ou deux enfants. Si le nœud a deux enfants, elle remplace le nœud à supprimer par le plus petit nœud de son sous-arbre droit (le successeur) et supprime ce successeur.
+> - ```find_min``` : Cette fonction **cherche** le nœud avec la plus petite valeur dans un sous-arbre en se déplaçant vers la gauche jusqu'à ce qu'il n'y ait plus de nœuds à gauche.
+> - ```delete_node```: Cette fonction **supprime** un nœud d'un arbre binaire de recherche. 
+> Elle gère trois cas : si le nœud a aucun enfant, un enfant, ou deux enfants. Si le nœud a deux enfants, elle remplace le nœud à supprimer par le plus petit nœud de son sous-arbre droit  et supprime ce successeur.
 
 Pourquoi cette idée ?
 
@@ -85,4 +105,5 @@ Pourquoi cette idée ?
 > La solution est de **remplacer** ce nœud par son "successeur logique" - le plus petit élément plus grand que lui.
 
 ### Fonction pour insert 
-
+> [!Note]
+> La fonction d'insertion gère l'ajout d'un nouveau nœud tout en maintenant l'équilibre de l'arbre.
