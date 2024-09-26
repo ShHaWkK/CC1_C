@@ -59,13 +59,17 @@ De plus, il offre une **persistance des données sur disque**  pour garantir que
 
 ## Commandes disponibles dans le REPL
 
-| Commande                       | Syntaxe                | Exemple            | Description                                          |
-|--------------------------------|-----------------------|--------------------|------------------------------------------------------|
-| Insérer une ligne              | `insert <id> <nom>`   | `insert 1 Alice`   | Ajoute une nouvelle ligne avec un ID et un nom      |
-| Sélectionner toutes les lignes  | `select`              | `select`           | Affiche toutes les lignes de la base de données     |
-| Rechercher une ligne par ID    | `search <id>`         | `search 1`         | Recherche et affiche une ligne spécifique par son ID |
-| Supprimer une ligne par ID     | `delete <id>`         | `delete 1`         | Supprime une ligne spécifique par son ID             |
-| Quitter et sauvegarder         | `.exit`               | `.exit`            | Sauvegarde l'arbre dans `db_save.txt` et quitte le programme |
+| Commande | Syntaxe | Exemple | Description |
+|----------|---------|---------|-------------|
+| Insérer | `insert <id> <nom>` | `insert 1 Alice` | Ajoute une nouvelle ligne |
+| Sélectionner tout | `select` | `select` | Affiche toutes les lignes |
+| Sélectionner par ID | `select id <id>` | `select id 1` | Affiche une ligne spécifique |
+| Supprimer | `delete <id>` | `delete 1` | Supprime une ligne |
+| Mettre à jour | `update <nom> where id = <id>` | `update Bob where id = 1` | Met à jour une ligne |
+| Afficher la structure | `show table` | `show table` | Montre la structure de la table |
+| Historique | `history` | `history` | Affiche l'historique des commandes |
+| Aide | `help` | `help` | Affiche l'aide |
+| Quitter | `.exit` | `.exit` | Sauvegarde et quitte le programme |
 
 ## Structure du Projet
 
@@ -107,3 +111,15 @@ Pourquoi cette idée ?
 ### Fonction pour insert 
 > [!Note]
 > La fonction d'insertion gère l'ajout d'un nouveau nœud tout en maintenant l'équilibre de l'arbre.
+
+
+> [!IMPORTANT]
+>Le projet utilise un arbre binaire de recherche pour stocker les données
+>La taille maximale du nom est limitée à 255 caractères
+>Les données sont sauvegardées automatiquement à la sortie du programme
+>L'historique des commandes est également sauvegardé
+
+>[!Note]
+**Sécurité**
+- Validation des entrées pour prévenir les **débordements de tampon**
+- Utilisation de **strncpy** pour des **copies de chaînes sécurisées**
