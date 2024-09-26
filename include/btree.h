@@ -23,6 +23,7 @@ typedef struct TreeNode {
 } TreeNode;
 
 extern TreeNode* root;
+extern TreeNode** index_table;  // Ajout de l'index pour accélérer les recherches
 
 void insert_row(int id, char* name);
 void select_row(void);

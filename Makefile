@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -std=c99 -g -Iinclude/
 
 # Objet du programme principal
-OBJ_MAIN = src/main.o src/repl.o src/btree.o src/db.o
+OBJ_MAIN = src/main.o src/repl.o src/btree.o src/db.o src/utils.o
 # Objet pour les tests
 OBJ_TEST = src/test.o src/btree.o src/db.o
 

@@ -12,21 +12,22 @@
 *   - load_tree: qui permet de charger l'arbre depuis un fichier
 
 * ---------------------------------------------------------------------------------
-*/
-
-#include <stdio.h>
+*/#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include "../include/btree.h"
 #include "../include/repl.h"
+#include "../include/utils.h"
 
 // Déclaration des types de commandes
 typedef enum {
     STATEMENT_INSERT,
     STATEMENT_SELECT,
     STATEMENT_DELETE,
-    STATEMENT_SEARCH
+    STATEMENT_SEARCH,
+    STATEMENT_UPDATE,
+    STATEMENT_HELP
 } StatementType;
 
 // Structure pour stocker une commande
@@ -38,13 +39,14 @@ typedef struct {
 
 // Fonction pour afficher l'invite de commande avec des couleurs
 void print_prompt() {
-    printf("\033[33mdb > \033[0m");  // Texte en jaune pour l'invite
+    printf("\033[36mdb > \033[0m");  // Texte en cyan pour l'invite
 }
+
 
 // Fonction pour lire l'entrée utilisateur
 void read_input(char* buffer, size_t buffer_length) {
     if (fgets(buffer, buffer_length, stdin) == NULL) {
-        printf("\033[31mError reading input\033[0m\n");
+        printf("\033[31m✗ Error reading input\033[0m\n");
         exit(EXIT_FAILURE);
     }
     buffer[strlen(buffer) - 1] = '\0';  // Retirer la nouvelle ligne
@@ -76,26 +78,38 @@ int prepare_statement(char* buffer, Statement* statement) {
             return 0;  // Erreur de syntaxe ou ID invalide
         }
         return 1;
+    } else if (strncmp(buffer, "update", 6) == 0) {
+        statement->type = STATEMENT_UPDATE;
+        int args_assigned = sscanf(buffer, "update %d %s", &(statement->id), statement->name);
+        if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
+            return 0;
+        }
+        return 1;
+    } else if (strcmp(buffer, "help") == 0) {
+        statement->type = STATEMENT_HELP;
+        return 1;
     }
     return -1;  // Commande non reconnue
 }
 
-// Vérifications avant insertion
-int validate_insert(int id, char* name) {
-    if (id <= 0) {
-        printf("\033[31mError: ID must be a positive integer.\033[0m\n");
-        return 0;
-    }
-    if (strlen(name) == 0) {
-        printf("\033[31mError: Name cannot be empty.\033[0m\n");
-        return 0;
-    }
-    TreeNode* existing_node = search_row(id);
-    if (existing_node != NULL) {
-        printf("\033[31mError: A row with ID %d already exists.\033[0m\n", id);
-        return 0;
-    }
-    return 1;  // Tout est valide
+// Affiche les commandes disponibles
+void print_help() {
+    printf("\n\033[36m=== Commandes Disponibles ===\033[0m\n");
+    printf("\033[32minsert <id> <name>\033[0m   : Insérer une nouvelle ligne\n");
+    printf("\033[32mselect\033[0m              : Afficher toutes les lignes\n");
+    printf("\033[32mdelete <id>\033[0m         : Supprimer une ligne avec l'ID\n");
+    printf("\033[32msearch <id>\033[0m         : Rechercher une ligne avec l'ID\n");
+    printf("\033[32mupdate <id> <name>\033[0m  : Mettre à jour le nom d'une ligne avec l'ID\n");
+    printf("\033[32m.exit\033[0m               : Sauvegarder et quitter\n");
+    printf("\033[32mhelp\033[0m                : Afficher cette aide\n");
+}
+
+// Confirmation de suppression
+int confirm_delete(int id) {
+    char confirmation[10];
+    printf("\033[31mÊtes-vous sûr de vouloir supprimer l'ID %d ? (y/n): \033[0m", id);
+    fgets(confirmation, 10, stdin);
+    return (confirmation[0] == 'y' || confirmation[0] == 'Y');
 }
 
 // Fonction pour exécuter une commande SQL avec des vérifications
@@ -104,25 +118,27 @@ void execute_statement(Statement* statement) {
         case (STATEMENT_INSERT):
             if (validate_insert(statement->id, statement->name)) {
                 insert_row(statement->id, statement->name);
-                printf("\033[32mInserted (%d, %s)\033[0m\n", statement->id, statement->name);  // Texte en vert
+                printf("\033[32m✓ Inserted (%d, %s)\033[0m\n", statement->id, statement->name);  // Texte en vert
             }
             break;
 
         case (STATEMENT_SELECT):
-            printf("\033[34m");  // Texte en bleu pour la sélection
+            printf("\033[34m");              
             select_row();
-            printf("\033[0m");   // Réinitialiser la couleur
+            printf("\033[0m");
             break;
 
         case (STATEMENT_DELETE):
-            {
+            if (confirm_delete(statement->id)) {
                 TreeNode* node = search_row(statement->id);
                 if (node == NULL) {
-                    printf("\033[31mError: No row found with ID %d to delete.\033[0m\n", statement->id);
+                    printf("\033[31m✗ Error: No row found with ID %d to delete.\033[0m\n", statement->id);
                 } else {
                     delete_row(statement->id);
-                    printf("\033[31mDeleted row with ID %d\033[0m\n", statement->id);  // Texte en rouge
+                    printf("\033[31m✓ Deleted row with ID %d\033[0m\n", statement->id); 
                 }
+            } else {
+                printf("\033[33mSuppression annulée.\033[0m\n");
             }
             break;
 
@@ -130,31 +146,52 @@ void execute_statement(Statement* statement) {
             {
                 TreeNode* node = search_row(statement->id);
                 if (node != NULL) {
-                    printf("\033[32mFound: (%d, %s)\033[0m\n", node->id, node->name);  // Texte en vert
+                    printf("\033[32m✓ Found: (%d, %s)\033[0m\n", node->id, node->name);  
                 } else {
-                    printf("\033[31mNo row found with ID %d\033[0m\n", statement->id);  // Texte en rouge
+                    printf("\033[31m✗ No row found with ID %d\033[0m\n", statement->id);  
                 }
             }
+            break;
+
+        case (STATEMENT_UPDATE):
+            {
+                TreeNode* node = search_row(statement->id);
+                if (node != NULL) {
+                    strcpy(node->name, statement->name);
+                    printf("\033[32m✓ Updated (%d, %s)\033[0m\n", node->id, node->name);
+                } else {
+                    printf("\033[31m✗ Error: No row found with ID %d to update.\033[0m\n", statement->id);
+                }
+            }
+            break;
+
+        case (STATEMENT_HELP):
+            print_help();
             break;
     }
 }
 
-// Boucle principale du REPL
+// REPL
 void repl(void) {
     char buffer[1024];
     Statement statement;
+    
+
+    printf("-------------------------------------------------\n"); 
+    printf("\033[32mBienvenue dans la base de données !\033[0m\nTapez 'help' pour voir les commandes.\n"); 
+    printf("-------------------------------------------------\n");
     
     while (1) {
         print_prompt();
         read_input(buffer, 1024);
 
         if (strcmp(buffer, ".exit") == 0) {
-            printf("Saving tree to file...\n");
+            printf("Sauvegarde de l'arbre dans un fichier...\n");
             FILE *file = fopen("db_save.txt", "w");
             assert(file != NULL);
             save_tree(file, root);
             fclose(file);
-            printf("Tree saved successfully.\n");
+            printf("\033[32m✓ Arbre sauvegardé avec succès.\033[0m\n");
             exit(EXIT_SUCCESS);
         }
 
@@ -162,9 +199,9 @@ void repl(void) {
         if (result == 1) {
             execute_statement(&statement);
         } else if (result == 0) {
-            printf("\033[31mSyntax error or invalid data. Could not parse statement.\033[0m\n");
+            printf("\033[31m✗ Erreur de syntaxe ou données invalides. Impossible de traiter la commande.\033[0m\n");
         } else {
-            printf("\033[31mUnrecognized command '%s'\033[0m\n", buffer);
+            printf("\033[31m✗ Commande non reconnue : '%s'\033[0m\n", buffer);
         }
     }
 }

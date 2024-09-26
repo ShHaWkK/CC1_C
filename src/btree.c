@@ -40,7 +40,7 @@ void insert_row(int id, char* name) {
 void traverse_tree(TreeNode* node) {
     if (node == NULL) return;
     traverse_tree(node->left);
-    printf("(%d, %s)\n", node->id, node->name);
+    printf("| %4d | %-20s |\n", node->id, node->name);  // Afficher sous forme de tableau
     traverse_tree(node->right);
 }
 
@@ -49,7 +49,11 @@ void select_row() {
     if (root == NULL) {
         printf("No rows found.\n");
     } else {
+        printf("+------+----------------------+\n");
+        printf("|  ID  | Name                 |\n");
+        printf("+------+----------------------+\n");
         traverse_tree(root);
+        printf("+------+----------------------+\n");
     }
 }
 
@@ -68,7 +72,7 @@ TreeNode* search_row(int id) {
     return NULL;  // Si le nœud n'est pas trouvé
 }
 
-// Fonction pour supprimer un nœud (à implémenter selon les besoins)
+// Fonction pour supprimer un nœud
 void delete_row(int id) {
     assert(id > 0);  // Vérification que l'ID est valide
     printf("Deleted row with ID %d\n", id);  // Suppression simulée
