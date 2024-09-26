@@ -3,7 +3,6 @@
 #include "../include/btree.h"
 #include "../include/utils.h"
 
-// Fonction qui vérifie si l'insertion est valide
 int validate_insert(int id, char* name) {
     if (id <= 0) {
         printf("\033[31mError: ID must be a positive integer.\033[0m\n");
@@ -19,5 +18,5 @@ int validate_insert(int id, char* name) {
         printf("\033[31mError: A row with ID %d already exists.\033[0m\n", id);
         return 0;
     }
-    return 1;  // L'insertion est valide
+    return 1; 
 }
