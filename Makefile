@@ -9,14 +9,23 @@ OBJ_TEST = src/test.o src/btree.o src/db.o
 TARGET_MAIN = class_db
 TARGET_TEST = class_db_tests
 
-all: $(TARGET_MAIN) $(TARGET_TEST)
+# Détection de l'OS
+ifeq ($(OS),Windows_NT)
+    RM = del /Q
+    EXE = .exe
+else
+    RM = rm -f
+    EXE =
+endif
+
+all: $(TARGET_MAIN)$(EXE) $(TARGET_TEST)$(EXE)
 
 # Compilation du programme principal
-$(TARGET_MAIN): $(OBJ_MAIN)
+$(TARGET_MAIN)$(EXE): $(OBJ_MAIN)
 	$(CC) $(CFLAGS) -o $@ $(OBJ_MAIN)
 
 # Compilation des tests
-$(TARGET_TEST): $(OBJ_TEST)
+$(TARGET_TEST)$(EXE): $(OBJ_TEST)
 	$(CC) $(CFLAGS) -o $@ $(OBJ_TEST)
 
 src/main.o: src/main.c
@@ -28,11 +37,8 @@ src/repl.o: src/repl.c
 src/btree.o: src/btree.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-src/db.o: src/db.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
 src/test.o: src/test.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f src/*.o $(TARGET_MAIN) $(TARGET_TEST)
+	$(RM) src/*.o $(TARGET_MAIN)$(EXE) $(TARGET_TEST)$(EXE)
