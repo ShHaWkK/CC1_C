@@ -75,7 +75,7 @@ De plus, il offre une **persistance des données sur disque**  pour garantir que
 
 ### Fonction pour delete : 
 > [!NOTE]
-> - 'find_min' : Cette fonction cherche le nœud avec la plus petite valeur dans un sous-arbre en se déplaçant vers la gauche jusqu'à ce qu'il n'y ait plus de nœuds à gauche.
+> - ```find_min``` : Cette fonction cherche le nœud avec la plus petite valeur dans un sous-arbre en se déplaçant vers la gauche jusqu'à ce qu'il n'y ait plus de nœuds à gauche.
 > - 'delete_node': Cette fonction supprime un nœud d'un arbre binaire de recherche. Elle gère trois cas : si le nœud a aucun enfant, un enfant, ou deux enfants. Si le nœud a deux enfants, elle remplace le nœud à supprimer par le plus petit nœud de son sous-arbre droit (le successeur) et supprime ce successeur.
 
 Pourquoi cette idée ?
@@ -83,3 +83,6 @@ Pourquoi cette idée ?
 > [!IMPORTANT]
 > Quand on supprime un nœud avec deux enfants, **on ne peut pas simplement le retirer sans casser la structure de l'arbre**. 
 > La solution est de **remplacer** ce nœud par son "successeur logique" - le plus petit élément plus grand que lui.
+
+### Fonction pour insert 
+
