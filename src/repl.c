@@ -1,16 +1,17 @@
 /*
-*  Fichier: btree.c
+* ---------------------------------------------------------------------------------
+*  Fichier: repl.c
 *  Author : ShHawk
-*  Date : 25/09/2024
-*  ---------------------------------------------------------------------------------
-*   Ce fichier contient les fonctions de manipulation de la structure de données
-*   qui est un arbre binaire
-*  Les fonctions sont: 
-*   - insert_row: qui permet d'insérer une ligne dans l'arbre
-*   - select_row: qui permet de selectionner toutes les lignes de l'arbre
-*   - save_tree: qui permet de sauvegarder l'arbre dans un fichier
-*   - load_tree: qui permet de charger l'arbre depuis un fichier
-
+*  Date : 26/09/2024
+* ---------------------------------------------------------------------------------
+*  Description : Sert à lire les commandes de l'utilisateur et les exécuter
+* Fonctions importantes :
+* - print_prompt : Affiche le prompt
+* - read_input : Lit l'entrée utilisateur
+* - prepare_statement : Prépare une commande
+* - print_help : Affiche les commandes disponibles
+* - execute_statement : Exécute une commande
+* - repl : Fonction principale pour lire les commandes
 * ---------------------------------------------------------------------------------
 */
 #include <stdio.h>
