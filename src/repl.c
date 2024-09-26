@@ -13,6 +13,8 @@
 *  - store_command : Stocke les commandes dans un historique
 *  - print_history : Affiche l'historique des commandes
 *  - save_command_history : Sauvegarde l'historique dans un fichier
+*  - load_command_history : Charge l'historique depuis un fichier
+*  - my_strdup : Duplique une chaîne de caractères
 * ---------------------------------------------------------------------------------
 */
 #include <stdio.h>
@@ -90,6 +92,25 @@ void save_command_history(const char* filename) {
 }
 
 /*
+* Fonction pour charger l'historique des commandes depuis un fichier
+*/
+void load_command_history(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        return;
+    }
+
+    char line[256];
+    while (fgets(line, sizeof(line), file) != NULL) {
+        line[strcspn(line, "\n")] = '\0';
+         // Charger chaque ligne dans l'historique
+        store_command(line);
+    }
+
+    fclose(file);
+}
+
+/*
 * Affiche le prompt
 */
 void print_prompt() {
@@ -123,6 +144,13 @@ int prepare_statement(char* buffer, Statement* statement) {
     } else if (strncmp(buffer, "select where id =", 17) == 0) {
         statement->type = STATEMENT_SELECT_BY_ID;
         int args_assigned = sscanf(buffer, "select where id = %d", &(statement->where_id));
+        if (args_assigned == 1) {
+            statement->has_where = 1;
+            return 1;
+        }
+    } else if (strncmp(buffer, "select id", 9) == 0) { 
+        statement->type = STATEMENT_SELECT_BY_ID;
+        int args_assigned = sscanf(buffer, "select id %d", &(statement->where_id));
         if (args_assigned == 1) {
             statement->has_where = 1;
             return 1;
@@ -165,6 +193,7 @@ void print_help() {
     printf("\n\033[36m=== Commandes Disponibles ===\033[0m\n");
     printf("\033[32minsert <id> <name>\033[0m   : Insérer une nouvelle ligne\n");
     printf("\033[32mselect\033[0m              : Afficher toutes les lignes\n");
+    printf("\033[32mselect id <id>\033[0m      : Sélectionner une ligne avec un ID spécifique\n");  // Ajout
     printf("\033[32mselect where id = <id>\033[0m : Sélectionner une ligne avec un ID spécifique\n");
     printf("\033[32mdelete <id>\033[0m         : Supprimer une ligne avec l'ID\n");
     printf("\033[32mupdate <name> where id = <id>\033[0m  : Mettre à jour le nom d'une ligne\n");
@@ -246,6 +275,9 @@ void repl(void) {
 
     // Charger l'arbre à partir du fichier
     load_tree("db_save.txt");
+
+    // Charger l'historique à partir du fichier
+    load_command_history("command_history.txt");
 
     while (1) {
         print_prompt();
