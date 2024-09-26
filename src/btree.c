@@ -51,7 +51,7 @@ void traverse_tree(TreeNode* node) {
 }
 
 /*
-* fonction select_row selectionne les lignes. 
+* fonction select_row sélectionne les lignes. 
 */
 void select_row() {
     if (root == NULL) {
@@ -84,7 +84,6 @@ TreeNode* search_row(int id) {
 
 /*
  * Fonction find_min permet de trouver le nœud le plus petit dans un sous-arbre
- *  Pour supprimer un nœud avec deux enfants  
  */
 TreeNode* find_min(TreeNode* node) {
     while (node->left != NULL) {
@@ -115,7 +114,6 @@ TreeNode* delete_node(TreeNode* root, int id) {
             return temp;
         }
 
-        // Trouver le successeur minimum dans le sous-arbre droit
         TreeNode* temp = find_min(root->right);
         root->id = temp->id;
         strcpy(root->name, temp->name);

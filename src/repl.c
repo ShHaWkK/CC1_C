@@ -13,6 +13,7 @@
 *  - repl : Fonction principale pour lire les commandes
 *  - store_command : Stocke les commandes dans un historique
 *  - print_history : Affiche l'historique des commandes
+*  - save_command_history : Sauvegarde l'historique des commandes dans un fichier
 * ---------------------------------------------------------------------------------
 */
 
@@ -53,10 +54,27 @@ int history_count = 0;
 */
 void store_command(const char* command) {
     if (history_count < MAX_HISTORY) {
-        command_history[history_count] = (char*)malloc(strlen(command) + 1);  // Allouer de la mémoire pour la commande
-        strcpy(command_history[history_count], command);  // Copier la commande
+        command_history[history_count] = strdup(command);  // Duplique la commande
         history_count++;
     }
+}
+
+/*
+* Fonction pour sauvegarder l'historique des commandes dans un fichier
+*/
+void save_command_history(const char* filename) {
+    FILE* file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("\033[31m✗ Erreur : Impossible d'ouvrir le fichier %s\033[0m\n", filename);
+        return;
+    }
+
+    for (int i = 0; i < history_count; i++) {
+        fprintf(file, "%s\n", command_history[i]);
+    }
+
+    fclose(file);
+    printf("\033[32m✓ Historique sauvegardé dans %s\033[0m\n", filename);
 }
 
 /*
@@ -148,14 +166,6 @@ void print_help() {
     printf("\033[32mhelp\033[0m                : Afficher cette aide\n");
 }
 
-// Confirmation de suppression
-int confirm_delete(int id) {
-    char confirmation[10];
-    printf("\033[31mEtes-vous sûr de vouloir supprimer l'ID %d ? (y/n): \033[0m", id);
-    fgets(confirmation, 10, stdin);
-    return (confirmation[0] == 'y' || confirmation[0] == 'Y');
-}
-
 /*
 * Fonction pour afficher l'historique des commandes
 */
@@ -245,6 +255,10 @@ void repl(void) {
         store_command(buffer);  // Enregistrer chaque commande
 
         if (strcmp(buffer, ".exit") == 0) {
+            // Sauvegarder l'historique des commandes
+            save_command_history("command_history.txt");
+
+            // Sauvegarder l'arbre binaire
             printf("Sauvegarde de l'arbre dans un fichier...\n");
             FILE* file = fopen("db_save.txt", "w");
             assert(file != NULL);
