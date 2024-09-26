@@ -4,5 +4,6 @@
 #include "btree.h"
 
 int validate_insert(int id, char* name);
+void print_history();
 
 #endif

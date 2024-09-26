@@ -10,13 +10,11 @@
 *  - prepare_statement : Prépare une commande
 *  - print_help : Affiche les commandes disponibles
 *  - execute_statement : Exécute une commande
-*  - repl : Fonction principale pour lire les commandes
 *  - store_command : Stocke les commandes dans un historique
 *  - print_history : Affiche l'historique des commandes
-*  - save_command_history : Sauvegarde l'historique des commandes dans un fichier
+*  - save_command_history : Sauvegarde l'historique dans un fichier
 * ---------------------------------------------------------------------------------
 */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,11 +28,13 @@
 typedef enum {
     STATEMENT_INSERT,
     STATEMENT_SELECT,
+    STATEMENT_SELECT_BY_ID,
     STATEMENT_DELETE,
-    STATEMENT_SEARCH,
     STATEMENT_UPDATE,
+    STATEMENT_SEARCH,
     STATEMENT_HELP,
-    STATEMENT_HISTORY
+    STATEMENT_HISTORY,
+    STATEMENT_SHOW_TABLE
 } StatementType;
 
 typedef struct {
@@ -45,6 +45,18 @@ typedef struct {
     int has_where;
 } Statement;
 
+/*
+* Ceci sert à dupliquer une chaîne de caractères
+*/
+char* my_strdup(const char* str) {
+    size_t len = strlen(str) + 1;
+    char* copy = malloc(len);
+    if (copy != NULL) {
+        memcpy(copy, str, len);
+    }
+    return copy;
+}
+
 // Tableau pour l'historique des commandes
 char* command_history[MAX_HISTORY];
 int history_count = 0;
@@ -54,7 +66,7 @@ int history_count = 0;
 */
 void store_command(const char* command) {
     if (history_count < MAX_HISTORY) {
-        command_history[history_count] = strdup(command);  // Duplique la commande
+        command_history[history_count] = my_strdup(command);
         history_count++;
     }
 }
@@ -84,7 +96,9 @@ void print_prompt() {
     printf("\033[36mdb_alex > \033[0m");
 }
 
-// Fonction pour lire l'entrée utilisateur
+/*
+* Fonction pour lire l'entrée utilisateur
+*/
 void read_input(char* buffer, size_t buffer_length) {
     if (fgets(buffer, buffer_length, stdin) == NULL) {
         printf("\033[31m✗ Error reading input\033[0m\n");
@@ -94,7 +108,7 @@ void read_input(char* buffer, size_t buffer_length) {
 }
 
 /*
-*  Fonction prepare_statement pour préparer une commande avec WHERE
+* Fonction prepare_statement pour préparer une commande avec WHERE et autres options
 */
 int prepare_statement(char* buffer, Statement* statement) {
     statement->has_where = 0;
@@ -106,18 +120,16 @@ int prepare_statement(char* buffer, Statement* statement) {
             return 0;
         }
         return 1;
-    } else if (strncmp(buffer, "select", 6) == 0) {
-        if (strstr(buffer, "where id =")) {
-            statement->type = STATEMENT_SELECT;
-            int args_assigned = sscanf(buffer, "select where id = %d", &(statement->where_id));
-            if (args_assigned == 1) {
-                statement->has_where = 1;
-                return 1;
-            }
-        } else {
-            statement->type = STATEMENT_SELECT;
+    } else if (strncmp(buffer, "select where id =", 17) == 0) {
+        statement->type = STATEMENT_SELECT_BY_ID;
+        int args_assigned = sscanf(buffer, "select where id = %d", &(statement->where_id));
+        if (args_assigned == 1) {
+            statement->has_where = 1;
             return 1;
         }
+    } else if (strncmp(buffer, "select", 6) == 0) {
+        statement->type = STATEMENT_SELECT;
+        return 1;
     } else if (strncmp(buffer, "delete", 6) == 0) {
         statement->type = STATEMENT_DELETE;
         int args_assigned = sscanf(buffer, "delete %d", &(statement->id));
@@ -125,22 +137,18 @@ int prepare_statement(char* buffer, Statement* statement) {
             return 0;
         }
         return 1;
-    } else if (strncmp(buffer, "search", 6) == 0) {
-        statement->type = STATEMENT_SEARCH;
-        int args_assigned = sscanf(buffer, "search %d", &(statement->id));
-        if (args_assigned < 1 || statement->id <= 0) {
-            return 0;
-        }
-        return 1;
     } else if (strncmp(buffer, "update", 6) == 0) {
         statement->type = STATEMENT_UPDATE;
-        int args_assigned = sscanf(buffer, "update %d %s", &(statement->id), statement->name);
+        int args_assigned = sscanf(buffer, "update %s where id = %d", statement->name, &(statement->id));
         if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
             return 0;
         }
         return 1;
     } else if (strcmp(buffer, "history") == 0) {
         statement->type = STATEMENT_HISTORY;
+        return 1;
+    } else if (strcmp(buffer, "show table") == 0) {
+        statement->type = STATEMENT_SHOW_TABLE;
         return 1;
     } else if (strcmp(buffer, "help") == 0) {
         statement->type = STATEMENT_HELP;
@@ -151,32 +159,24 @@ int prepare_statement(char* buffer, Statement* statement) {
 }
 
 /*
-*   Fonction Help affiche les commandes disponibles.
+* Fonction Help affiche les commandes disponibles.
 */
 void print_help() {
     printf("\n\033[36m=== Commandes Disponibles ===\033[0m\n");
     printf("\033[32minsert <id> <name>\033[0m   : Insérer une nouvelle ligne\n");
     printf("\033[32mselect\033[0m              : Afficher toutes les lignes\n");
-    printf("\033[32mselect where id = <id>\033[0m : Sélectionner une ligne avec un id spécifique\n");
-    printf("\033[32msearch <id>\033[0m         : Rechercher une ligne avec un id spécifique\n");
+    printf("\033[32mselect where id = <id>\033[0m : Sélectionner une ligne avec un ID spécifique\n");
     printf("\033[32mdelete <id>\033[0m         : Supprimer une ligne avec l'ID\n");
-    printf("\033[32mupdate <id> <name>\033[0m  : Mettre à jour le nom d'une ligne avec l'ID\n");
+    printf("\033[32mupdate <name> where id = <id>\033[0m  : Mettre à jour le nom d'une ligne\n");
+    printf("\033[32mshow table\033[0m          : Afficher la structure de la table\n");
     printf("\033[32mhistory\033[0m             : Afficher l'historique des commandes\n");
     printf("\033[32m.exit\033[0m               : Sauvegarder et quitter\n");
     printf("\033[32mhelp\033[0m                : Afficher cette aide\n");
 }
 
 /*
-* Fonction pour afficher l'historique des commandes
+* Fonction pour exécuter une commande SQL avec des vérifications
 */
-void print_history() {
-    printf("\n\033[36m=== Historique des Commandes ===\033[0m\n");
-    for (int i = 0; i < history_count; i++) {
-        printf("%d: %s\n", i + 1, command_history[i]);
-    }
-}
-
-// Fonction pour exécuter une commande SQL avec des vérifications
 void execute_statement(Statement* statement) {
     TreeNode* node = NULL;
 
@@ -189,16 +189,11 @@ void execute_statement(Statement* statement) {
             break;
 
         case STATEMENT_SELECT:
-            if (statement->has_where) {
-                node = search_row(statement->where_id);
-                if (node) {
-                    printf("\033[32m✓ Found: (%d, %s)\033[0m\n", node->id, node->name);
-                } else {
-                    printf("\033[31m✗ No row found with ID %d\033[0m\n", statement->where_id);
-                }
-            } else {
-                select_row();
-            }
+            select_row();
+            break;
+
+        case STATEMENT_SELECT_BY_ID:
+            select_row_by_id(statement->where_id);
             break;
 
         case STATEMENT_SEARCH:
@@ -221,17 +216,15 @@ void execute_statement(Statement* statement) {
             break;
 
         case STATEMENT_UPDATE:
-            node = search_row(statement->id);
-            if (node) {
-                strcpy(node->name, statement->name);
-                printf("\033[32m✓ Updated row with ID %d to name %s\033[0m\n", node->id, node->name);
-            } else {
-                printf("\033[31m✗ Error: No row found with ID %d to update.\033[0m\n", statement->id);
-            }
+            update_row(statement->id, statement->name);
             break;
 
         case STATEMENT_HISTORY:
             print_history();
+            break;
+
+        case STATEMENT_SHOW_TABLE:
+            show_table();
             break;
 
         case STATEMENT_HELP:
@@ -240,7 +233,9 @@ void execute_statement(Statement* statement) {
     }
 }
 
-// Boucle principale du REPL
+/*
+* Boucle principale du REPL
+*/
 void repl(void) {
     char buffer[1024];
     Statement statement;
@@ -249,22 +244,24 @@ void repl(void) {
     printf("\033[32mBienvenue dans la base de données !\033[0m\nTapez 'help' pour voir les commandes.\n");
     printf("-------------------------------------------------\n");
 
+    // Charger l'arbre à partir du fichier
+    load_tree("db_save.txt");
+
     while (1) {
         print_prompt();
         read_input(buffer, 1024);
         store_command(buffer);  // Enregistrer chaque commande
 
         if (strcmp(buffer, ".exit") == 0) {
-            // Sauvegarder l'historique des commandes
+            printf("Sauvegarde de l'historique dans un fichier...\n");
             save_command_history("command_history.txt");
 
-            // Sauvegarder l'arbre binaire
             printf("Sauvegarde de l'arbre dans un fichier...\n");
             FILE* file = fopen("db_save.txt", "w");
             assert(file != NULL);
             save_tree(file, root);
             fclose(file);
-            printf("\033[32m✓ Arbre sauvegardé avec succès.\033[0m\n");
+            printf("\033[32m✓ Arbre et historique sauvegardés avec succès.\033[0m\n");
             exit(EXIT_SUCCESS);
         }
 

@@ -29,3 +29,14 @@ int validate_insert(int id, char* name) {
     }
     return 1; 
 }
+
+// Tableau pour l'historique des commandes
+extern char* command_history[];
+extern int history_count;
+
+void print_history() {
+    printf("\n\033[36m=== Historique des Commandes ===\033[0m\n");
+    for (int i = 0; i < history_count; i++) {
+        printf("%d: %s\n", i + 1, command_history[i]);
+    }
+}

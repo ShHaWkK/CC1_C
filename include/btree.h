@@ -26,7 +26,10 @@ extern TreeNode* root;
 
 void insert_row(int id, char* name);
 void select_row(void);
+void select_row_by_id(int id);
 TreeNode* search_row(int id);
+void update_row(int id, char* new_name);
+void show_table(); 
 void delete_row(int id);
 void save_tree(FILE* file, TreeNode* node);
 void load_tree(const char* filename);

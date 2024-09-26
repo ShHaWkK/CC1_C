@@ -42,7 +42,16 @@ void insert_row(int id, char* name) {
     root = insert_in_tree(root, id, name);
 }
 
-// Fonction pour parcourir l'arbre en ordre croissant
+void show_table() {
+    printf("\n\033[36m=== Structure de la Table ===\033[0m\n");
+    printf("+------+----------------------+\n");
+    printf("|  ID  | Name                 |\n");
+    printf("+------+----------------------+\n");
+}
+
+/*
+* Fonction pour parcourir l'arbre en ordre croissant
+*/
 void traverse_tree(TreeNode* node) {
     if (node == NULL) return;
     traverse_tree(node->left);
@@ -51,7 +60,23 @@ void traverse_tree(TreeNode* node) {
 }
 
 /*
-* fonction select_row sélectionne les lignes. 
+* Fonction pour afficher une ligne par ID
+*/
+void select_row_by_id(int id) {
+    TreeNode* node = search_row(id);
+    if (node == NULL) {
+        printf("No row found with ID %d.\n", id);
+    } else {
+        printf("+------+----------------------+\n");
+        printf("|  ID  | Name                 |\n");
+        printf("+------+----------------------+\n");
+        printf("| %4d | %-20s |\n", node->id, node->name);
+        printf("+------+----------------------+\n");
+    }
+}
+
+/*
+* Fonction pour afficher toutes les lignes de l'arbre
 */
 void select_row() {
     if (root == NULL) {
@@ -95,7 +120,6 @@ TreeNode* find_min(TreeNode* node) {
 /*
 * Fonction delete_node permet de supprimer un nœud dans l'arbre
 */
-
 TreeNode* delete_node(TreeNode* root, int id) {
     if (root == NULL) return root;
 
@@ -114,6 +138,7 @@ TreeNode* delete_node(TreeNode* root, int id) {
             return temp;
         }
 
+        // Trouver le successeur minimum dans le sous-arbre droit
         TreeNode* temp = find_min(root->right);
         root->id = temp->id;
         strcpy(root->name, temp->name);
@@ -122,11 +147,26 @@ TreeNode* delete_node(TreeNode* root, int id) {
     return root;
 }
 
-
+/*
+* Fonction delete_row permet de supprimer une ligne par ID
+*/
 void delete_row(int id) {
     assert(id > 0);
     root = delete_node(root, id);
     printf("\033[32m✓ Deleted row with ID %d\033[0m\n", id);
+}
+
+/*
+* Fonction update_row permet de mettre à jour une ligne par ID
+*/
+void update_row(int id, char* new_name) {
+    TreeNode* node = search_row(id);
+    if (node == NULL) {
+        printf("No row found with ID %d.\n", id);
+    } else {
+        strcpy(node->name, new_name);
+        printf("\033[32m✓ Updated row with ID %d to name %s\033[0m\n", id, new_name);
+    }
 }
 
 /*
