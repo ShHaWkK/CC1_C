@@ -115,6 +115,7 @@ TreeNode* delete_node(TreeNode* root, int id) {
             return temp;
         }
 
+        // Trouver le successeur minimum dans le sous-arbre droit
         TreeNode* temp = find_min(root->right);
         root->id = temp->id;
         strcpy(root->name, temp->name);
@@ -122,6 +123,7 @@ TreeNode* delete_node(TreeNode* root, int id) {
     }
     return root;
 }
+
 
 void delete_row(int id) {
     assert(id > 0);
