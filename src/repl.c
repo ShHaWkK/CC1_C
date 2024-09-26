@@ -24,7 +24,8 @@
 #include "../include/btree.h"
 #include "../include/utils.h"
 
-#define MAX_HISTORY 100
+#define MAX_NAME_LENGTH 255
+#define MAX_HISTORY 100      
 
 // Structure pour stocker une commande
 typedef enum {
@@ -42,19 +43,28 @@ typedef enum {
 typedef struct {
     StatementType type;
     int id;
-    char name[255];
+    char name[MAX_NAME_LENGTH]; // :)
     int where_id;
     int has_where;
 } Statement;
 
 /*
 * Ceci sert à dupliquer une chaîne de caractères
+* Utilisation de strncpy pour une copie sécurisée.
 */
 char* my_strdup(const char* str) {
     size_t len = strlen(str) + 1;
+    
+    // Limite la longueur de la chaîne pour éviter les dépassements de tampon
+    if (len > MAX_NAME_LENGTH) {
+        len = MAX_NAME_LENGTH;
+    }
+    
     char* copy = malloc(len);
     if (copy != NULL) {
-        memcpy(copy, str, len);
+        strncpy(copy, str, len - 1);
+        // La chaîne doit être terminée par un caractère nul
+        copy[len - 1] = '\0';
     }
     return copy;
 }
@@ -103,8 +113,7 @@ void load_command_history(const char* filename) {
     char line[256];
     while (fgets(line, sizeof(line), file) != NULL) {
         line[strcspn(line, "\n")] = '\0';
-         // Charger chaque ligne dans l'historique
-        store_command(line);
+        store_command(line);  // Charger chaque ligne dans l'historique
     }
 
     fclose(file);
@@ -125,18 +134,19 @@ void read_input(char* buffer, size_t buffer_length) {
         printf("\033[31m✗ Error reading input\033[0m\n");
         exit(EXIT_FAILURE);
     }
-    buffer[strlen(buffer) - 1] = '\0';
+    buffer[strlen(buffer) - 1] = '\0';  // Retirer le saut de ligne final
 }
 
 /*
 * Fonction prepare_statement pour préparer une commande avec WHERE et autres options
+* Ici, nous utilisons strncpy pour une copie sécurisée du nom.
 */
 int prepare_statement(char* buffer, Statement* statement) {
     statement->has_where = 0;
 
     if (strncmp(buffer, "insert", 6) == 0) {
         statement->type = STATEMENT_INSERT;
-        int args_assigned = sscanf(buffer, "insert %d %s", &(statement->id), statement->name);
+        int args_assigned = sscanf(buffer, "insert %d %254s", &(statement->id), statement->name); // Limite à 254 caractères
         if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
             return 0;
         }
@@ -167,7 +177,7 @@ int prepare_statement(char* buffer, Statement* statement) {
         return 1;
     } else if (strncmp(buffer, "update", 6) == 0) {
         statement->type = STATEMENT_UPDATE;
-        int args_assigned = sscanf(buffer, "update %s where id = %d", statement->name, &(statement->id));
+        int args_assigned = sscanf(buffer, "update %254s where id = %d", statement->name, &(statement->id));  // Limite à 254 caractères
         if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
             return 0;
         }
@@ -193,7 +203,7 @@ void print_help() {
     printf("\n\033[36m=== Commandes Disponibles ===\033[0m\n");
     printf("\033[32minsert <id> <name>\033[0m   : Insérer une nouvelle ligne\n");
     printf("\033[32mselect\033[0m              : Afficher toutes les lignes\n");
-    printf("\033[32mselect id <id>\033[0m      : Sélectionner une ligne avec un ID spécifique\n");  // Ajout
+    printf("\033[32mselect id <id>\033[0m      : Sélectionner une ligne avec un ID spécifique\n");
     printf("\033[32mselect where id = <id>\033[0m : Sélectionner une ligne avec un ID spécifique\n");
     printf("\033[32mdelete <id>\033[0m         : Supprimer une ligne avec l'ID\n");
     printf("\033[32mupdate <name> where id = <id>\033[0m  : Mettre à jour le nom d'une ligne\n");
@@ -201,6 +211,14 @@ void print_help() {
     printf("\033[32mhistory\033[0m             : Afficher l'historique des commandes\n");
     printf("\033[32m.exit\033[0m               : Sauvegarder et quitter\n");
     printf("\033[32mhelp\033[0m                : Afficher cette aide\n");
+}
+
+// Fonction pour afficher la structure de la table
+void show_table() {
+    printf("\n\033[36m=== Structure de la Table ===\033[0m\n");
+    printf("+------+----------------------+\n");
+    printf("|  ID  | Name                 |\n");
+    printf("+------+----------------------+\n");
 }
 
 /*

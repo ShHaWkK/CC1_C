@@ -12,6 +12,8 @@
 * ---------------------------------------------------------------------------------
 *
 */
+
+
 #ifndef BTREE_H
 #define BTREE_H
 
@@ -24,15 +26,16 @@ typedef struct TreeNode {
 
 extern TreeNode* root;
 
-void insert_row(int id, char* name);
-void select_row(void);
+void insert_row(int id, const char* name);
 void select_row_by_id(int id);
+void traverse_tree(TreeNode* node);
+void select_row(void);
 TreeNode* search_row(int id);
-void update_row(int id, char* new_name);
-void show_table(); 
 void delete_row(int id);
+void update_row(int id, const char* new_name); 
 void save_tree(FILE* file, TreeNode* node);
 void load_tree(const char* filename);
+TreeNode* insert_in_tree(TreeNode* root, int id, const char* name);
 TreeNode* find_min(TreeNode* node);
 TreeNode* delete_node(TreeNode* root, int id);
 

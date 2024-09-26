@@ -4,27 +4,46 @@
 #include <assert.h>
 #include "../include/btree.h"
 
+#define MAX_NAME_LENGTH 255  // Limite de taille pour le nom
+
 TreeNode* root = NULL;
 
 /*
-*   Fonction create_node permet de créer un nouveau nœud
+* Fonction create_node permet de créer un nouveau nœud avec validation de l'entrée
 */
-TreeNode* create_node(int id, char* name) {
+TreeNode* create_node(int id, const char* name) {
     assert(id > 0 && name != NULL);
+
+    // Vérifier la longueur du nom pour éviter les dépassements de tampon
+    if (strlen(name) >= MAX_NAME_LENGTH) {
+        printf("\033[31mError: Name is too long (maximum %d characters allowed).\033[0m\n", MAX_NAME_LENGTH - 1);
+        return NULL;
+    }
+
+    // Allouer dynamiquement un nouveau nœud
     TreeNode* node = (TreeNode*)malloc(sizeof(TreeNode));
+    if (node == NULL) {
+        printf("\033[31mError: Memory allocation failed.\033[0m\n");
+        return NULL;
+    }
+
     node->id = id;
-    strcpy(node->name, name);
+
+    // Utiliser strncpy pour copier en toute sécurité la chaîne dans le champ 'name'
+    strncpy(node->name, name, MAX_NAME_LENGTH - 1);
+    node->name[MAX_NAME_LENGTH - 1] = '\0';  // Assurez-vous que la chaîne est terminée par un caractère nul
+
     node->left = NULL;
     node->right = NULL;
     return node;
 }
 
 /*
-*   Fonction insert_in_tree permet d'insérer un nœud dans l'arbre  
+* Fonction insert_in_tree permet d'insérer un nœud dans l'arbre
 */
-TreeNode* insert_in_tree(TreeNode* node, int id, char* name) {
+TreeNode* insert_in_tree(TreeNode* node, int id, const char* name) {
     if (node == NULL) {
-        return create_node(id, name);  
+        return create_node(id, name);
     }
     if (id < node->id) {
         node->left = insert_in_tree(node->left, id, name);
@@ -35,32 +54,22 @@ TreeNode* insert_in_tree(TreeNode* node, int id, char* name) {
 }
 
 /*
-*  Fonction insert_row permet d'insérer une ligne dans l'arbre 
+* Fonction insert_row permet d'insérer une ligne dans l'arbre avec vérification
 */
-void insert_row(int id, char* name) {
-    assert(id > 0 && name != NULL);  
+void insert_row(int id, const char* name) {
+    assert(id > 0 && name != NULL);
+
+    // Vérifier si la chaîne de caractères dépasse la taille maximale
+    if (strlen(name) >= MAX_NAME_LENGTH) {
+        printf("\033[31mError: Name is too long (maximum %d characters allowed).\033[0m\n", MAX_NAME_LENGTH - 1);
+        return;
+    }
+
     root = insert_in_tree(root, id, name);
 }
 
-void show_table() {
-    printf("\n\033[36m=== Structure de la Table ===\033[0m\n");
-    printf("+------+----------------------+\n");
-    printf("|  ID  | Name                 |\n");
-    printf("+------+----------------------+\n");
-}
-
 /*
-* Fonction pour parcourir l'arbre en ordre croissant
-*/
-void traverse_tree(TreeNode* node) {
-    if (node == NULL) return;
-    traverse_tree(node->left);
-    printf("| %4d | %-20s |\n", node->id, node->name);
-    traverse_tree(node->right);
-}
-
-/*
-* Fonction pour afficher une ligne par ID
+* Fonction select_row_by_id permet d'afficher une ligne par ID
 */
 void select_row_by_id(int id) {
     TreeNode* node = search_row(id);
@@ -76,7 +85,17 @@ void select_row_by_id(int id) {
 }
 
 /*
-* Fonction pour afficher toutes les lignes de l'arbre
+* Fonction traverse_tree permet de parcourir l'arbre en ordre croissant
+*/
+void traverse_tree(TreeNode* node) {
+    if (node == NULL) return;
+    traverse_tree(node->left);
+    printf("| %4d | %-20s |\n", node->id, node->name);
+    traverse_tree(node->right);
+}
+
+/*
+* Fonction select_row permet d'afficher toutes les lignes de l'arbre
 */
 void select_row() {
     if (root == NULL) {
@@ -91,7 +110,7 @@ void select_row() {
 }
 
 /*
-*  Fonction search_row permet de rechercher un nœud dans l'arbre 
+* Fonction search_row permet de rechercher un nœud dans l'arbre
 */
 TreeNode* search_row(int id) {
     TreeNode* current = root;
@@ -138,10 +157,10 @@ TreeNode* delete_node(TreeNode* root, int id) {
             return temp;
         }
 
-        // Trouver le successeur minimum dans le sous-arbre droit
         TreeNode* temp = find_min(root->right);
         root->id = temp->id;
-        strcpy(root->name, temp->name);
+        strncpy(root->name, temp->name, MAX_NAME_LENGTH - 1);
+        root->name[MAX_NAME_LENGTH - 1] = '\0';  // Assurez-vous que la chaîne est terminée par un caractère nul
         root->right = delete_node(root->right, temp->id);
     }
     return root;
@@ -159,18 +178,19 @@ void delete_row(int id) {
 /*
 * Fonction update_row permet de mettre à jour une ligne par ID
 */
-void update_row(int id, char* new_name) {
+void update_row(int id, const char* new_name) {
     TreeNode* node = search_row(id);
     if (node == NULL) {
         printf("No row found with ID %d.\n", id);
     } else {
-        strcpy(node->name, new_name);
+        strncpy(node->name, new_name, MAX_NAME_LENGTH - 1);
+        node->name[MAX_NAME_LENGTH - 1] = '\0';  // Assurez-vous que la chaîne est terminée par un caractère nul
         printf("\033[32m✓ Updated row with ID %d to name %s\033[0m\n", id, new_name);
     }
 }
 
 /*
-*   Fonction Save_tree permet de sauvegarder l'arbre dans un fichier
+* Fonction save_tree permet de sauvegarder l'arbre dans un fichier
 */
 void save_tree(FILE *file, TreeNode *node) {
     if (node == NULL) return;
@@ -180,14 +200,14 @@ void save_tree(FILE *file, TreeNode *node) {
 }
 
 /*
-* Fonction Load_tree permet de charger l'arbre depuis un fichier
+* Fonction load_tree permet de charger l'arbre depuis un fichier
 */
 void load_tree(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) return;
 
     int id;
-    char name[255];
+    char name[MAX_NAME_LENGTH];
 
     while (fscanf(file, "%d %s", &id, name) != EOF) {
         insert_row(id, name);
