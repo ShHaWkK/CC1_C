@@ -1,25 +1,29 @@
 /*
-* ---------------------------------------------------------------------------------
 *  Fichier: repl.c
 *  Author : ShHawk
 *  Date : 26/09/2024
 * ---------------------------------------------------------------------------------
-*  Description : Sert à lire les commandes de l'utilisateur et les exécuter
-* Fonctions importantes :
-* - print_prompt : Affiche le prompt
-* - read_input : Lit l'entrée utilisateur
-* - prepare_statement : Prépare une commande
-* - print_help : Affiche les commandes disponibles
-* - execute_statement : Exécute une commande
-* - repl : Fonction principale pour lire les commandes
+*  Description : Sert à lire les commandes de l'utilisateur et les exécuter.
+*  Fonctions importantes :
+*  - print_prompt : Affiche le prompt
+*  - read_input : Lit l'entrée utilisateur
+*  - prepare_statement : Prépare une commande
+*  - print_help : Affiche les commandes disponibles
+*  - execute_statement : Exécute une commande
+*  - repl : Fonction principale pour lire les commandes
+*  - store_command : Stocke les commandes dans un historique
+*  - print_history : Affiche l'historique des commandes
 * ---------------------------------------------------------------------------------
 */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include "../include/btree.h"
 #include "../include/utils.h"
+
+#define MAX_HISTORY 100
 
 // Structure pour stocker une commande
 typedef enum {
@@ -28,7 +32,8 @@ typedef enum {
     STATEMENT_DELETE,
     STATEMENT_SEARCH,
     STATEMENT_UPDATE,
-    STATEMENT_HELP
+    STATEMENT_HELP,
+    STATEMENT_HISTORY
 } StatementType;
 
 typedef struct {
@@ -38,6 +43,21 @@ typedef struct {
     int where_id;
     int has_where;
 } Statement;
+
+// Tableau pour l'historique des commandes
+char* command_history[MAX_HISTORY];
+int history_count = 0;
+
+/*
+* Fonction pour stocker chaque commande dans l'historique
+*/
+void store_command(const char* command) {
+    if (history_count < MAX_HISTORY) {
+        command_history[history_count] = (char*)malloc(strlen(command) + 1);  // Allouer de la mémoire pour la commande
+        strcpy(command_history[history_count], command);  // Copier la commande
+        history_count++;
+    }
+}
 
 /*
 * Affiche le prompt
@@ -65,7 +85,7 @@ int prepare_statement(char* buffer, Statement* statement) {
         statement->type = STATEMENT_INSERT;
         int args_assigned = sscanf(buffer, "insert %d %s", &(statement->id), statement->name);
         if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
-            return 0; 
+            return 0;
         }
         return 1;
     } else if (strncmp(buffer, "select", 6) == 0) {
@@ -91,7 +111,7 @@ int prepare_statement(char* buffer, Statement* statement) {
         statement->type = STATEMENT_SEARCH;
         int args_assigned = sscanf(buffer, "search %d", &(statement->id));
         if (args_assigned < 1 || statement->id <= 0) {
-            return 0;  
+            return 0;
         }
         return 1;
     } else if (strncmp(buffer, "update", 6) == 0) {
@@ -100,6 +120,9 @@ int prepare_statement(char* buffer, Statement* statement) {
         if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
             return 0;
         }
+        return 1;
+    } else if (strcmp(buffer, "history") == 0) {
+        statement->type = STATEMENT_HISTORY;
         return 1;
     } else if (strcmp(buffer, "help") == 0) {
         statement->type = STATEMENT_HELP;
@@ -110,7 +133,7 @@ int prepare_statement(char* buffer, Statement* statement) {
 }
 
 /*
-*   Fonction Help affiche les commandes disponibles. 
+*   Fonction Help affiche les commandes disponibles.
 */
 void print_help() {
     printf("\n\033[36m=== Commandes Disponibles ===\033[0m\n");
@@ -120,6 +143,7 @@ void print_help() {
     printf("\033[32msearch <id>\033[0m         : Rechercher une ligne avec un id spécifique\n");
     printf("\033[32mdelete <id>\033[0m         : Supprimer une ligne avec l'ID\n");
     printf("\033[32mupdate <id> <name>\033[0m  : Mettre à jour le nom d'une ligne avec l'ID\n");
+    printf("\033[32mhistory\033[0m             : Afficher l'historique des commandes\n");
     printf("\033[32m.exit\033[0m               : Sauvegarder et quitter\n");
     printf("\033[32mhelp\033[0m                : Afficher cette aide\n");
 }
@@ -130,6 +154,16 @@ int confirm_delete(int id) {
     printf("\033[31mEtes-vous sûr de vouloir supprimer l'ID %d ? (y/n): \033[0m", id);
     fgets(confirmation, 10, stdin);
     return (confirmation[0] == 'y' || confirmation[0] == 'Y');
+}
+
+/*
+* Fonction pour afficher l'historique des commandes
+*/
+void print_history() {
+    printf("\n\033[36m=== Historique des Commandes ===\033[0m\n");
+    for (int i = 0; i < history_count; i++) {
+        printf("%d: %s\n", i + 1, command_history[i]);
+    }
 }
 
 // Fonction pour exécuter une commande SQL avec des vérifications
@@ -186,6 +220,10 @@ void execute_statement(Statement* statement) {
             }
             break;
 
+        case STATEMENT_HISTORY:
+            print_history();
+            break;
+
         case STATEMENT_HELP:
             print_help();
             break;
@@ -204,6 +242,7 @@ void repl(void) {
     while (1) {
         print_prompt();
         read_input(buffer, 1024);
+        store_command(buffer);  // Enregistrer chaque commande
 
         if (strcmp(buffer, ".exit") == 0) {
             printf("Sauvegarde de l'arbre dans un fichier...\n");
