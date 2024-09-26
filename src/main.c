@@ -5,11 +5,11 @@
 
 
 int main() {
-    printf("Starting program...\n");
+    printf("Commencer le programme...\n");
     load_tree("db_save.txt");
-    printf("Tree loaded.\n");
+    printf("L'arbre est chargé avec succès.\n");
     repl();
-    printf("Program finished.\n");
+    printf("Fin du programme.\n");
     system("pause");
     
     return 0;

@@ -49,7 +49,7 @@ void read_input(char* buffer, size_t buffer_length) {
         printf("\033[31m✗ Error reading input\033[0m\n");
         exit(EXIT_FAILURE);
     }
-    buffer[strlen(buffer) - 1] = '\0';  // Retirer la nouvelle ligne
+    buffer[strlen(buffer) - 1] = '\0';  
 }
 
 // Fonction pour préparer une commande à partir de l'entrée utilisateur
@@ -92,7 +92,9 @@ int prepare_statement(char* buffer, Statement* statement) {
     return -1;  // Commande non reconnue
 }
 
-// Affiche les commandes disponibles
+/*
+*   Fonction Help affiche les commandes. 
+*/
 void print_help() {
     printf("\n\033[36m=== Commandes Disponibles ===\033[0m\n");
     printf("\033[32minsert <id> <name>\033[0m   : Insérer une nouvelle ligne\n");
@@ -107,7 +109,7 @@ void print_help() {
 // Confirmation de suppression
 int confirm_delete(int id) {
     char confirmation[10];
-    printf("\033[31mÊtes-vous sûr de vouloir supprimer l'ID %d ? (y/n): \033[0m", id);
+    printf("\033[31mEtes-vous sur de vouloir supprimer l'ID %d ? (y/n): \033[0m", id);
     fgets(confirmation, 10, stdin);
     return (confirmation[0] == 'y' || confirmation[0] == 'Y');
 }
@@ -118,7 +120,7 @@ void execute_statement(Statement* statement) {
         case (STATEMENT_INSERT):
             if (validate_insert(statement->id, statement->name)) {
                 insert_row(statement->id, statement->name);
-                printf("\033[32m✓ Inserted (%d, %s)\033[0m\n", statement->id, statement->name);  // Texte en vert
+                printf("\033[32m✓ Inserted (%d, %s)\033[0m\n", statement->id, statement->name);
             }
             break;
 
@@ -158,7 +160,7 @@ void execute_statement(Statement* statement) {
                 TreeNode* node = search_row(statement->id);
                 if (node != NULL) {
                     strcpy(node->name, statement->name);
-                    printf("\033[32m✓ Updated (%d, %s)\033[0m\n", node->id, node->name);
+                    printf("\033[32m✓ Modification (%d, %s)\033[0m\n", node->id, node->name);
                 } else {
                     printf("\033[31m✗ Error: No row found with ID %d to update.\033[0m\n", statement->id);
                 }
