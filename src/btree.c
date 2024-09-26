@@ -82,10 +82,51 @@ TreeNode* search_row(int id) {
     return NULL;
 }
 
-// Fonction pour supprimer un nœud
+/*
+ * Fonction find_min permet de trouver le nœud le plus petit dans un sous-arbre
+ *  Pour supprimer un nœud avec deux enfants  
+ */
+TreeNode* find_min(TreeNode* node) {
+    while (node->left != NULL) {
+        node = node->left;
+    }
+    return node;
+}
+
+/*
+* Fonction delete_node permet de supprimer un nœud dans l'arbre
+*/
+
+TreeNode* delete_node(TreeNode* root, int id) {
+    if (root == NULL) return root;
+
+    if (id < root->id) {
+        root->left = delete_node(root->left, id);
+    } else if (id > root->id) {
+        root->right = delete_node(root->right, id);
+    } else {
+        if (root->left == NULL) {
+            TreeNode* temp = root->right;
+            free(root);
+            return temp;
+        } else if (root->right == NULL) {
+            TreeNode* temp = root->left;
+            free(root);
+            return temp;
+        }
+
+        TreeNode* temp = find_min(root->right);
+        root->id = temp->id;
+        strcpy(root->name, temp->name);
+        root->right = delete_node(root->right, temp->id);
+    }
+    return root;
+}
+
 void delete_row(int id) {
-    assert(id > 0); 
-    printf("Deleted row with ID %d\n", id);
+    assert(id > 0);
+    root = delete_node(root, id);
+    printf("\033[32m✓ Deleted row with ID %d\033[0m\n", id);
 }
 
 /*
