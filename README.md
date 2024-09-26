@@ -55,7 +55,7 @@ Il permet d'effectuer des opérations de base telles que l'insertion, la sélect
 De plus, il offre une **persistance des données sur disque**  pour garantir que les informations sont conservées.
 
  - **Commandes de base** comme `insert`, `select`, `delete` et `search` disponibles dans un environnement REPL
- - **Sortie colorée** : Retour interactif en couleur pour **améliorer l'expérience utilisateur** (par exemple, vert pour les insertions réussies, rouge pour les erreurs).
+ - **Sortie colorée** : J'ai mis des couleurs pour avoir une interface utilisateur pour **améliorer l'expérience utilisateur** (par exemple, vert pour les insertions réussies, rouge pour les erreurs).
 
 ## Commandes disponibles dans le REPL
 

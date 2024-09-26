@@ -4,11 +4,13 @@
 #include <assert.h>
 #include "../include/btree.h"
 
-TreeNode* root = NULL;  // Définition de la racine de l'arbre binaire
+TreeNode* root = NULL;
 
-// Fonction pour créer un nouveau nœud
+/*
+*   Fonction create_node permet de créer un nouveau nœud
+*/
 TreeNode* create_node(int id, char* name) {
-    assert(id > 0 && name != NULL);  // Vérification des entrées
+    assert(id > 0 && name != NULL);
     TreeNode* node = (TreeNode*)malloc(sizeof(TreeNode));
     node->id = id;
     strcpy(node->name, name);
@@ -17,22 +19,26 @@ TreeNode* create_node(int id, char* name) {
     return node;
 }
 
-// Fonction pour insérer un nœud dans l'arbre binaire
+/*
+*   Fonction insert_in_tree permet d'insérer un nœud dans l'arbre  
+*/
 TreeNode* insert_in_tree(TreeNode* node, int id, char* name) {
     if (node == NULL) {
-        return create_node(id, name);  // Créer un nouveau nœud si nécessaire
+        return create_node(id, name);  
     }
     if (id < node->id) {
-        node->left = insert_in_tree(node->left, id, name);  // Insérer à gauche
+        node->left = insert_in_tree(node->left, id, name);
     } else if (id > node->id) {
-        node->right = insert_in_tree(node->right, id, name);  // Insérer à droite
+        node->right = insert_in_tree(node->right, id, name);
     }
     return node;
 }
 
-// Interface pour insérer une ligne dans l'arbre
+/*
+*  Fonction insert_row permet d'insérer une ligne dans l'arbre 
+*/
 void insert_row(int id, char* name) {
-    assert(id > 0 && name != NULL);  // Vérification des paramètres
+    assert(id > 0 && name != NULL);  
     root = insert_in_tree(root, id, name);
 }
 
@@ -40,11 +46,13 @@ void insert_row(int id, char* name) {
 void traverse_tree(TreeNode* node) {
     if (node == NULL) return;
     traverse_tree(node->left);
-    printf("| %4d | %-20s |\n", node->id, node->name);  // Afficher sous forme de tableau
+    printf("| %4d | %-20s |\n", node->id, node->name);
     traverse_tree(node->right);
 }
 
-// Interface pour afficher les lignes
+/*
+* fonction select_row selectionne les lignes. 
+*/
 void select_row() {
     if (root == NULL) {
         printf("No rows found.\n");
@@ -57,7 +65,9 @@ void select_row() {
     }
 }
 
-// Fonction pour rechercher un nœud par ID
+/*
+*  Fonction search_row permet de rechercher un nœud dans l'arbre 
+*/
 TreeNode* search_row(int id) {
     TreeNode* current = root;
     while (current != NULL) {
@@ -69,24 +79,28 @@ TreeNode* search_row(int id) {
             current = current->right;
         }
     }
-    return NULL;  // Si le nœud n'est pas trouvé
+    return NULL;
 }
 
 // Fonction pour supprimer un nœud
 void delete_row(int id) {
-    assert(id > 0);  // Vérification que l'ID est valide
-    printf("Deleted row with ID %d\n", id);  // Suppression simulée
+    assert(id > 0); 
+    printf("Deleted row with ID %d\n", id);
 }
 
-// Fonction pour sauvegarder l'arbre binaire dans un fichier
+/*
+*   Fonction Save_tree permet de sauvegarder l'arbre dans un fichier
+*/
 void save_tree(FILE *file, TreeNode *node) {
     if (node == NULL) return;
-    fprintf(file, "%d %s\n", node->id, node->name);  // Sauvegarder chaque nœud
+    fprintf(file, "%d %s\n", node->id, node->name);
     save_tree(file, node->left);
     save_tree(file, node->right);
 }
 
-// Fonction pour charger l'arbre depuis un fichier
+/*
+* Fonction Load_tree permet de charger l'arbre depuis un fichier
+*/
 void load_tree(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) return;
@@ -95,7 +109,7 @@ void load_tree(const char *filename) {
     char name[255];
 
     while (fscanf(file, "%d %s", &id, name) != EOF) {
-        insert_row(id, name);  // Insérer les données dans l'arbre
+        insert_row(id, name);
     }
 
     fclose(file);
