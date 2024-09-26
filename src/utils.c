@@ -12,7 +12,7 @@ int validate_insert(int id, char* name) {
         printf("\033[31mError: Name cannot be empty.\033[0m\n");
         return 0;
     }
-    // Vérifie si l'ID existe déjà
+    // Vérification de l'ID
     TreeNode* existing_node = search_row(id);
     if (existing_node != NULL) {
         printf("\033[31mError: A row with ID %d already exists.\033[0m\n", id);
