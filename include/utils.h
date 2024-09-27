@@ -6,4 +6,7 @@
 int validate_insert(int id, char* name);
 void print_history();
 
+extern char* command_history[];
+extern int history_count;
+
 #endif

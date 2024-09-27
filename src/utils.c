@@ -6,10 +6,13 @@
 *  Description : Sert à valider les entrées utilisateur
 *  ---------------------------------------------------------------------------------
 */
+extern char* command_history[];
+extern int history_count;
 
 #include <stdio.h>
 #include <string.h>
 #include "../include/btree.h"
+#include "../include/repl.h"
 #include "../include/utils.h"
 
 int validate_insert(int id, char* name) {
@@ -29,10 +32,7 @@ int validate_insert(int id, char* name) {
     }
     return 1; 
 }
-
-// Tableau pour l'historique des commandes
-extern char* command_history[];
-extern int history_count;
+       
 
 void print_history() {
     printf("\n\033[36m=== Historique des Commandes ===\033[0m\n");

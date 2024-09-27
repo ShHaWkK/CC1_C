@@ -12,31 +12,35 @@
 * ---------------------------------------------------------------------------------
 *
 */
-
-
 #ifndef BTREE_H
 #define BTREE_H
 
+#include <stdio.h>
+
+#define MAX_NAME_LENGTH 255
+
 typedef struct TreeNode {
     int id;
-    char name[255];
+    char name[MAX_NAME_LENGTH];
     struct TreeNode* left;
     struct TreeNode* right;
 } TreeNode;
 
 extern TreeNode* root;
 
-void insert_row(int id, const char* name);
-void select_row_by_id(int id);
-void traverse_tree(TreeNode* node);
-void select_row(void);
-TreeNode* search_row(int id);
-void delete_row(int id);
-void update_row(int id, const char* new_name); 
-void save_tree(FILE* file, TreeNode* node);
-void load_tree(const char* filename);
+TreeNode* create_node(int id, const char* name);
 TreeNode* insert_in_tree(TreeNode* root, int id, const char* name);
 TreeNode* find_min(TreeNode* node);
 TreeNode* delete_node(TreeNode* root, int id);
+TreeNode* search_row(int id);
+
+void insert_row(int id, const char* name);  // Assurez-vous que cette déclaration est présente
+void select_row_by_id(int id);
+void traverse_tree(TreeNode* node);
+void select_row(void);
+void delete_row(int id);
+void update_row(int id, const char* new_name);
+void save_tree(FILE* file, TreeNode* node);
+void load_tree(const char* filename);
 
 #endif
