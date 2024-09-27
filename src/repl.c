@@ -171,7 +171,7 @@ void print_help() {
     printf("\033[32minsert <id> <name>\033[0m   : Insérer une nouvelle ligne\n");
     printf("\033[32mselect\033[0m              : Afficher toutes les lignes\n");
     printf("\033[32mselect id <id>\033[0m      : Sélectionner une ligne avec un ID spécifique\n");
-    printf("\033[32mselect where id = <id>\033[0m : Sélectionner une ligne avec un ID spécifique (alternative)\n");
+    printf("\033[32mselect where id = <id>\033[0m : Sélectionner une ligne avec un ID spécifique\n");
     printf("\033[32mdelete <id>\033[0m         : Supprimer une ligne\n");
     printf("\033[32mupdate <name> where id = <id>\033[0m  : Mettre à jour une ligne\n");
     printf("\033[32mshow table\033[0m          : Afficher la structure de la table\n");
