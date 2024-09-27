@@ -256,7 +256,7 @@ void repl(void) {
             assert(file != NULL);
             save_tree(file, root);
             fclose(file);
-            printf("\033[32m✓ Arbre et historique sauvegardés avec succès.\033[0m\n");
+            printf("\033 Arbre et historique sauvegardés avec succès.\033[0m\n");
             exit(EXIT_SUCCESS);
         }
 
