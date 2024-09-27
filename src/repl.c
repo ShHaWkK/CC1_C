@@ -120,14 +120,23 @@ int prepare_statement(char* buffer, Statement* statement) {
             return 0;
         }
         return 1;
-    } else if (strncmp(buffer, "select id", 9) == 0) { 
+    } else if (strncmp(buffer, "select id", 9) == 0) {
         statement->type = STATEMENT_SELECT_BY_ID;
         int args_assigned = sscanf(buffer, "select id %d", &(statement->id));
-        if (args_assigned == 1) {
-            return 1;
+        if (args_assigned != 1) {
+            return 0;
         }
+        return 1;
     } else if (strncmp(buffer, "select", 6) == 0) {
         statement->type = STATEMENT_SELECT;
+        char* where_clause = strstr(buffer, "where");
+        if (where_clause) {
+            statement->has_where = 1;
+            int args_assigned = sscanf(where_clause, "where id = %d", &(statement->where_id));
+            if (args_assigned != 1) {
+                return 0;
+            }
+        }
         return 1;
     } else if (strncmp(buffer, "delete", 6) == 0) {
         statement->type = STATEMENT_DELETE;
@@ -162,6 +171,7 @@ void print_help() {
     printf("\033[32minsert <id> <name>\033[0m   : Insérer une nouvelle ligne\n");
     printf("\033[32mselect\033[0m              : Afficher toutes les lignes\n");
     printf("\033[32mselect id <id>\033[0m      : Sélectionner une ligne avec un ID spécifique\n");
+    printf("\033[32mselect where id = <id>\033[0m : Sélectionner une ligne avec un ID spécifique (alternative)\n");
     printf("\033[32mdelete <id>\033[0m         : Supprimer une ligne\n");
     printf("\033[32mupdate <name> where id = <id>\033[0m  : Mettre à jour une ligne\n");
     printf("\033[32mshow table\033[0m          : Afficher la structure de la table\n");
@@ -169,6 +179,7 @@ void print_help() {
     printf("\033[32m.exit\033[0m               : Sauvegarder et quitter\n");
     printf("\033[32mhelp\033[0m                : Afficher cette aide\n");
 }
+
 
 void show_table_structure() {
     printf("\n\033[36m=== Structure de la Table ===\033[0m\n");
@@ -189,7 +200,11 @@ void execute_statement(Statement* statement) {
             insert_into_table(table, statement->id, statement->name);
             break;
         case STATEMENT_SELECT:
-            select_all_from_table(table);
+            if (statement->has_where) {
+                select_row_from_table(table, statement->where_id);
+            } else {
+                select_all_from_table(table);
+            }
             break;
         case STATEMENT_SELECT_BY_ID:
             select_row_from_table(table, statement->id);
@@ -214,6 +229,7 @@ void execute_statement(Statement* statement) {
             break;
     }
 }
+
 
 void repl(void) {
     char buffer[1024];
