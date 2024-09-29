@@ -1,13 +1,12 @@
+#include "../include/table.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "../include/btree.h"
-#include "../include/table.h"
+#include <string.h>
 
-/* Crée une nouvelle table */
 Table* create_table() {
     Table* table = (Table*)malloc(sizeof(Table));
     if (table == NULL) {
-        printf("Erreur d'allocation mémoire pour la table.\n");
+        printf("Error: Memory allocation failed for table.\n");
         return NULL;
     }
     table->root = NULL;
@@ -15,21 +14,19 @@ Table* create_table() {
     return table;
 }
 
-/* Insère une ligne dans la table */
 void insert_into_table(Table* table, int id, const char* name) {
     if (search_row(id) != NULL) {
-        printf("Erreur : L'ID %d existe déjà.\n", id);
+        printf("Error: ID %d already exists.\n", id);
         return;
     }
     table->root = insert_in_tree(table->root, id, name);
     table->row_count++;
-    printf("Ligne insérée avec succès : ID = %d, Nom = %s\n", id, name);
+    printf("Row inserted successfully: ID = %d, Name = %s\n", id, name);
 }
 
-/* Sélectionne toutes les lignes */
 void select_all_from_table(Table* table) {
     if (table->root == NULL) {
-        printf("Aucune ligne trouvée.\n");
+        printf("No rows found.\n");
     } else {
         printf("+------+----------------------+\n");
         printf("|  ID  | Name                 |\n");
@@ -39,11 +36,10 @@ void select_all_from_table(Table* table) {
     }
 }
 
-/* Sélectionne une ligne par ID */
-void select_row_from_table(__attribute__((unused)) Table* table, int id) {
+void select_row_from_table(Table* table, int id) {
     TreeNode* node = search_row(id);
     if (node == NULL) {
-        printf("Aucune ligne trouvée avec l'ID %d.\n", id);
+        printf("No row found with ID %d.\n", id);
     } else {
         printf("+------+----------------------+\n");
         printf("|  ID  | Name                 |\n");
@@ -53,41 +49,38 @@ void select_row_from_table(__attribute__((unused)) Table* table, int id) {
     }
 }
 
-/* Supprime une ligne par ID */
 void delete_from_table(Table* table, int id) {
     if (search_row(id) == NULL) {
-        printf("Erreur : Aucun ID %d trouvé pour la suppression.\n", id);
+        printf("Error: No ID %d found for deletion.\n", id);
         return;
     }
     table->root = delete_node(table->root, id);
     table->row_count--;
-    printf("Ligne avec ID %d supprimée avec succès.\n", id);
+    printf("Row with ID %d deleted successfully.\n", id);
 }
 
-/* Sauvegarde la table dans un fichier binaire */
 void save_table(Table* table, const char* filename) {
     FILE* file = fopen(filename, "wb");
     if (file == NULL) {
-        printf("Erreur lors de l'ouverture du fichier pour la sauvegarde.\n");
+        printf("Error opening file for saving.\n");
         return;
     }
-    fwrite(&(table->row_count), sizeof(int), 1, file);  // Sauvegarder le nombre de lignes
-    save_tree(file, table->root);  // Sauvegarder l'arbre binaire
+    fwrite(&(table->row_count), sizeof(int), 1, file);
+    save_tree(file, table->root);
     fclose(file);
-    printf("Table sauvegardée dans %s.\n", filename);
+    printf("Table saved to %s successfully.\n", filename);
 }
 
-/* Charge la table depuis un fichier binaire */
 void load_table(Table* table, const char* filename) {
     FILE* file = fopen(filename, "rb");
     if (file == NULL) {
-        printf("Erreur lors de l'ouverture du fichier pour le chargement.\n");
+        printf("Error opening file for loading.\n");
         return;
     }
 
-    fread(&(table->row_count), sizeof(int), 1, file);  // Charger le nombre de lignes
-    fclose(file);  // Fermer le fichier après lecture du nombre de lignes
+    fread(&(table->row_count), sizeof(int), 1, file);
+    fclose(file);
 
-    load_tree(filename);  // Passer le nom du fichier pour charger l'arbre binaire
-    printf("Table chargée depuis %s.\n", filename);
+    load_tree(filename);
+    printf("Table loaded from %s successfully.\n", filename);
 }

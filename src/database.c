@@ -238,3 +238,139 @@ void load_database(Database* db, const char* filename) {
     
     printf("Database loaded from file '%s' successfully.\n", filename);
 }
+
+void show_tables(Database* db) {
+    printf("Tables in the database:\n");
+    for (int i = 0; i < db->num_tables; i++) {
+        printf("- %s\n", db->tables[i].name);
+    }
+}
+
+void show_columns(Database* db, const char* table_name) {
+    Table* table = NULL;
+    for (int i = 0; i < db->num_tables; i++) {
+        if (strcmp(db->tables[i].name, table_name) == 0) {
+            table = &db->tables[i];
+            break;
+        }
+    }
+    
+    if (table == NULL) {
+        printf("Table '%s' not found.\n", table_name);
+        return;
+    }
+    
+    printf("Columns in table '%s':\n", table_name);
+    for (int i = 0; i < table->num_columns; i++) {
+        printf("- %s (%s)\n", table->columns[i].name, table->columns[i].type);
+    }
+}
+
+void select_from(Database* db, const char* table_name, char** columns, int num_columns) {
+    Table* table = NULL;
+    for (int i = 0; i < db->num_tables; i++) {
+        if (strcmp(db->tables[i].name, table_name) == 0) {
+            table = &db->tables[i];
+            break;
+        }
+    }
+    
+    if (table == NULL) {
+        printf("Table '%s' not found.\n", table_name);
+        return;
+    }
+    
+    int* column_indices = malloc(num_columns * sizeof(int));
+    for (int i = 0; i < num_columns; i++) {
+        column_indices[i] = -1;
+        for (int j = 0; j < table->num_columns; j++) {
+            if (strcmp(table->columns[j].name, columns[i]) == 0) {
+                column_indices[i] = j;
+                break;
+            }
+        }
+        if (column_indices[i] == -1) {
+            printf("Column '%s' not found in table '%s'.\n", columns[i], table_name);
+            free(column_indices);
+            return;
+        }
+    }
+    
+    for (int i = 0; i < num_columns; i++) {
+        printf("%-15s", columns[i]);
+    }
+    printf("\n");
+    
+    for (int i = 0; i < table->num_rows; i++) {
+        for (int j = 0; j < num_columns; j++) {
+            printf("%-15s", table->rows[i].values[column_indices[j]]);
+        }
+        printf("\n");
+    }
+    
+    free(column_indices);
+}
+
+void join_tables(Database* db, const char* table1, const char* table2, const char* join_column) {
+    Table* t1 = NULL;
+    Table* t2 = NULL;
+    
+    for (int i = 0; i < db->num_tables; i++) {
+        if (strcmp(db->tables[i].name, table1) == 0) {
+            t1 = &db->tables[i];
+        }
+        if (strcmp(db->tables[i].name, table2) == 0) {
+            t2 = &db->tables[i];
+        }
+    }
+    
+    if (t1 == NULL || t2 == NULL) {
+        printf("One or both tables not found.\n");
+        return;
+    }
+    
+    int col1 = -1, col2 = -1;
+    for (int i = 0; i < t1->num_columns; i++) {
+        if (strcmp(t1->columns[i].name, join_column) == 0) {
+            col1 = i;
+            break;
+        }
+    }
+    for (int i = 0; i < t2->num_columns; i++) {
+        if (strcmp(t2->columns[i].name, join_column) == 0) {
+            col2 = i;
+            break;
+        }
+    }
+    
+    if (col1 == -1 || col2 == -1) {
+        printf("Join column not found in one or both tables.\n");
+        return;
+    }
+    
+    for (int i = 0; i < t1->num_columns; i++) {
+        printf("%-15s", t1->columns[i].name);
+    }
+    for (int i = 0; i < t2->num_columns; i++) {
+        if (i != col2) {
+            printf("%-15s", t2->columns[i].name);
+        }
+    }
+    printf("\n");
+    
+    for (int i = 0; i < t1->num_rows; i++) {
+        for (int j = 0; j < t2->num_rows; j++) {
+            if (strcmp(t1->rows[i].values[col1], t2->rows[j].values[col2]) == 0) {
+                for (int k = 0; k < t1->num_columns; k++) {
+                    printf("%-15s", t1->rows[i].values[k]);
+                }
+                for (int k = 0; k < t2->num_columns; k++) {
+                    if (k != col2) {
+                        printf("%-15s", t2->rows[j].values[k]);
+                    }
+                }
+                printf("\n");
+            }
+        }
+    }
+}

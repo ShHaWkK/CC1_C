@@ -42,8 +42,13 @@ typedef enum {
     STATEMENT_HELP,
     STATEMENT_HISTORY,
     STATEMENT_SHOW_TABLES,
+    STATEMENT_SHOW_COLUMNS,
+    STATEMENT_SELECT_FROM,
+    STATEMENT_JOIN,
     STATEMENT_SAVE,
     STATEMENT_LOAD,
+    STATEMENT_INSERT_INTO,
+    STATEMENT_DROP_TABLE,
     STATEMENT_EXIT
 } StatementType;
 
@@ -60,6 +65,8 @@ typedef struct {
     char name[MAX_NAME_LENGTH];
     int where_id;
     int has_where;
+    int num_columns;
+    char column_names[MAX_COLUMNS][MAX_NAME_LENGTH];
 } Statement;
 
 char* command_history[MAX_HISTORY];
@@ -107,13 +114,33 @@ int prepare_statement(char* input, Statement* statement) {
         statement->type = STATEMENT_SELECT_WHERE;
         return sscanf(input, "select id %d", &(statement->id)) == 1;
     } else if (strncmp(input, "select", 6) == 0) {
-        statement->type = STATEMENT_SELECT;
-        char* where = strstr(input, "where");
-        if (where) {
-            statement->has_where = 1;
-            return sscanf(where, "where id = %d", &(statement->where_id)) == 1;
+        char* from = strstr(input, "from");
+        if (from) {
+            statement->type = STATEMENT_SELECT_FROM;
+            char columns[MAX_INPUT];
+            sscanf(input, "select %[^from] from %s", columns, statement->table_name);
+            char* token = strtok(columns, ",");
+            int i = 0;
+            while (token != NULL && i < MAX_COLUMNS) {
+                while (*token == ' ') token++; // skip leading spaces
+                char* end = token + strlen(token) - 1;
+                while (end > token && *end == ' ') end--; // remove trailing spaces
+                *(end + 1) = '\0';
+                strcpy(statement->values[i], token);
+                i++;
+                token = strtok(NULL, ",");
+            }
+            statement->num_columns = i;
+            return 1;
+        } else {
+            statement->type = STATEMENT_SELECT;
+            char* where = strstr(input, "where");
+            if (where) {
+                statement->has_where = 1;
+                return sscanf(where, "where id = %d", &(statement->where_id)) == 1;
+            }
+            return 1;
         }
-        return 1;
     } else if (strncmp(input, "update", 6) == 0) {
         statement->type = STATEMENT_UPDATE;
         return sscanf(input, "update %254s where id = %d", statement->name, &(statement->id)) == 2;
@@ -129,12 +156,62 @@ int prepare_statement(char* input, Statement* statement) {
     } else if (strcmp(input, "show tables") == 0) {
         statement->type = STATEMENT_SHOW_TABLES;
         return 1;
+    } else if (strncmp(input, "show columns", 12) == 0) {
+        statement->type = STATEMENT_SHOW_COLUMNS;
+        return sscanf(input, "show columns %s", statement->table_name) == 1;
+    } else if (strncmp(input, "join", 4) == 0) {
+        statement->type = STATEMENT_JOIN;
+        return sscanf(input, "join %s %s on %s", statement->table_name, statement->column_name, statement->column_type) == 3;
     } else if (strncmp(input, "save", 4) == 0) {
         statement->type = STATEMENT_SAVE;
         return sscanf(input, "save %s", statement->table_name) == 1;
     } else if (strncmp(input, "load", 4) == 0) {
         statement->type = STATEMENT_LOAD;
         return sscanf(input, "load %s", statement->table_name) == 1;
+    } else if (strncmp(input, "INSERT INTO", 11) == 0) {
+        statement->type = STATEMENT_INSERT_INTO;
+        char* table_name_start = input + 12;
+        char* columns_start = strchr(table_name_start, '(');
+        if (columns_start == NULL) {
+            return 0;
+        }
+        *columns_start = '\0';
+        sscanf(table_name_start, "%s", statement->table_name);
+        char* values_start = strstr(columns_start + 1, ") VALUES (");
+        if (values_start == NULL) {
+            return 0;
+        }
+        *values_start = '\0';
+        values_start += 10;
+        char* values_end = strchr(values_start, ')');
+        if (values_end == NULL) {
+            return 0;
+        }
+        *values_end = '\0';
+        
+        char* column = strtok(columns_start + 1, ",");
+        int i = 0;
+        while (column != NULL && i < MAX_COLUMNS) {
+            while (*column == ' ') column++;
+            strcpy(statement->column_names[i], column);
+            column = strtok(NULL, ",");
+            i++;
+        }
+        statement->num_columns = i;
+        
+        char* value = strtok(values_start, ",");
+        i = 0;
+        while (value != NULL && i < MAX_COLUMNS) {
+            while (*value == ' ') value++;
+            strcpy(statement->values[i], value);
+            value = strtok(NULL, ",");
+            i++;
+        }
+        
+        return statement->num_columns == i;
+    } else if (strncmp(input, "DROP TABLE", 10) == 0) {
+        statement->type = STATEMENT_DROP_TABLE;
+        return sscanf(input, "DROP TABLE %s", statement->table_name) == 1;
     } else if (strcmp(input, ".exit") == 0) {
         statement->type = STATEMENT_EXIT;
         return 1;
@@ -176,13 +253,28 @@ void execute_statement(Statement* statement) {
             print_history();
             break;
         case STATEMENT_SHOW_TABLES:
-            show_table_structure();
+            show_tables(&db);
+            break;
+        case STATEMENT_SHOW_COLUMNS:
+            show_columns(&db, statement->table_name);
+            break;
+        case STATEMENT_SELECT_FROM:
+            select_from(&db, statement->table_name, statement->values, statement->num_columns);
+            break;
+        case STATEMENT_JOIN:
+            join_tables(&db, statement->table_name, statement->column_name, statement->column_type);
             break;
         case STATEMENT_SAVE:
             save_database(&db, statement->table_name);
             break;
         case STATEMENT_LOAD:
             load_database(&db, statement->table_name);
+            break;
+        case STATEMENT_INSERT_INTO:
+            insert_into(&db, statement->table_name, statement->column_names, statement->values, statement->num_columns);
+            break;
+        case STATEMENT_DROP_TABLE:
+            drop_table(&db, statement->table_name);
             break;
         case STATEMENT_EXIT:
             printf("Saving history...\n");
