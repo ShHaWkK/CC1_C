@@ -10,7 +10,6 @@ void insert_row(int id, const char* name) {
     root = insert_in_tree(root, id, name); 
 }
 
-/* Fonction create_node permet de créer un nouveau nœud avec validation de l'entrée */
 TreeNode* create_node(int id, const char* name) {
     assert(id > 0 && name != NULL);
 
@@ -33,7 +32,6 @@ TreeNode* create_node(int id, const char* name) {
     return node;
 }
 
-/* Fonction insert_in_tree permet d'insérer un nœud dans l'arbre */
 TreeNode* insert_in_tree(TreeNode* node, int id, const char* name) {
     if (node == NULL) {
         return create_node(id, name);
@@ -46,7 +44,6 @@ TreeNode* insert_in_tree(TreeNode* node, int id, const char* name) {
     return node;
 }
 
-/* Fonction traverse_tree permet de parcourir l'arbre en ordre croissant */
 void traverse_tree(TreeNode* node) {
     if (node == NULL) return;
     traverse_tree(node->left);
@@ -54,7 +51,6 @@ void traverse_tree(TreeNode* node) {
     traverse_tree(node->right);
 }
 
-/* Fonction select_row_by_id permet d'afficher une ligne par ID */
 void select_row_by_id(int id) {
     TreeNode* node = search_row(id);
     if (node == NULL) {
@@ -68,7 +64,6 @@ void select_row_by_id(int id) {
     }
 }
 
-/* Fonction select_row permet d'afficher toutes les lignes de l'arbre */
 void select_row() {
     if (root == NULL) {
         printf("No rows found.\n");
@@ -81,7 +76,6 @@ void select_row() {
     }
 }
 
-/* Fonction search_row permet de rechercher un nœud dans l'arbre */
 TreeNode* search_row(int id) {
     TreeNode* current = root;
     while (current != NULL) {
@@ -96,7 +90,6 @@ TreeNode* search_row(int id) {
     return NULL;
 }
 
-/* Fonction find_min permet de trouver le nœud le plus petit dans un sous-arbre */
 TreeNode* find_min(TreeNode* node) {
     while (node->left != NULL) {
         node = node->left;
@@ -104,7 +97,6 @@ TreeNode* find_min(TreeNode* node) {
     return node;
 }
 
-/* Fonction delete_node permet de supprimer un nœud dans l'arbre */
 TreeNode* delete_node(TreeNode* root, int id) {
     if (root == NULL) return root;
 
@@ -132,14 +124,12 @@ TreeNode* delete_node(TreeNode* root, int id) {
     return root;
 }
 
-/* Fonction delete_row permet de supprimer une ligne par ID */
 void delete_row(int id) {
     assert(id > 0);
     root = delete_node(root, id);
     printf("Deleted row with ID %d\n", id);
 }
 
-/* Fonction update_row permet de mettre à jour une ligne par ID */
 void update_row(int id, const char* new_name) {
     TreeNode* node = search_row(id);
     if (node == NULL) {
@@ -151,7 +141,6 @@ void update_row(int id, const char* new_name) {
     }
 }
 
-/* Fonction save_tree permet de sauvegarder l'arbre dans un fichier */
 void save_tree(FILE *file, TreeNode *node) {
     if (node == NULL) return;
     fprintf(file, "%d %s\n", node->id, node->name);
@@ -159,7 +148,6 @@ void save_tree(FILE *file, TreeNode *node) {
     save_tree(file, node->right);
 }
 
-/* Fonction load_tree permet de charger l'arbre depuis un fichier */
 void load_tree(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) return;

@@ -3,8 +3,8 @@ CC = gcc
 CFLAGS_COMMON = -Wall -Wextra -Werror -std=c99 -g -Iinclude/
 
 # Fichiers objets pour la version principale et la version de test
-OBJ_MAIN = src/main.o src/repl.o src/btree.o src/db.o src/utils.o src/table.o
-OBJ_TEST = src/test.o src/repl.o src/btree.o src/db.o src/utils.o src/table.o
+OBJ_MAIN = src/main.o src/repl.o src/btree.o src/database.o src/utils.o src/table.o
+OBJ_TEST = src/test.o src/repl.o src/btree.o src/database.o src/utils.o src/table.o
 
 # Noms des cibles principales et de test
 TARGET_MAIN = class_db

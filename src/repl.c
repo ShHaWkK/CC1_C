@@ -22,27 +22,40 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "../include/btree.h"
+#include "../include/database.h"
 #include "../include/repl.h"
 #include "../include/utils.h"
-#include "../include/table.h"
+#include "../include/btree.h"
 
+#define MAX_INPUT 1000
+#define MAX_HISTORY 100
 #define MAX_NAME_LENGTH 255
-#define MAX_HISTORY 100      
 
 typedef enum {
+    STATEMENT_CREATE_TABLE,
+    STATEMENT_ADD_COLUMN,
     STATEMENT_INSERT,
     STATEMENT_SELECT,
-    STATEMENT_SELECT_BY_ID,
-    STATEMENT_DELETE,
+    STATEMENT_SELECT_WHERE,
     STATEMENT_UPDATE,
+    STATEMENT_DELETE,
     STATEMENT_HELP,
     STATEMENT_HISTORY,
-    STATEMENT_SHOW_TABLE
+    STATEMENT_SHOW_TABLES,
+    STATEMENT_SAVE,
+    STATEMENT_LOAD,
+    STATEMENT_EXIT
 } StatementType;
 
 typedef struct {
     StatementType type;
+    char table_name[MAX_NAME_LENGTH];
+    char column_name[MAX_NAME_LENGTH];
+    char column_type[20];
+    char values[MAX_COLUMNS][MAX_NAME_LENGTH];
+    char where_column[MAX_NAME_LENGTH];
+    char where_value[MAX_NAME_LENGTH];
+    int row_id;
     int id;
     char name[MAX_NAME_LENGTH];
     int where_id;
@@ -52,50 +65,14 @@ typedef struct {
 char* command_history[MAX_HISTORY];
 int history_count = 0;
 
-char* my_strdup(const char* str) {
-    size_t len = strlen(str) + 1;
-    if (len > MAX_NAME_LENGTH) {
-        len = MAX_NAME_LENGTH;
-    }
-    char* copy = malloc(len);
-    if (copy != NULL) {
-        strncpy(copy, str, len - 1);
-        copy[len - 1] = '\0';
-    }
-    return copy;
-}
+Database db;
+TreeNode* root = NULL;
 
-void store_command(const char* command) {
-    if (history_count < MAX_HISTORY) {
-        command_history[history_count] = my_strdup(command);
-        history_count++;
-    }
-}
-
-void save_command_history(const char* filename) {
-    FILE* file = fopen(filename, "w");
-    if (file == NULL) {
-        printf("\033[31m✗ Erreur : Impossible d'ouvrir le fichier %s\033[0m\n", filename);
-        return;
-    }
-    for (int i = 0; i < history_count; i++) {
-        fprintf(file, "%s\n", command_history[i]);
-    }
-    fclose(file);
-    printf("\033[32m✓ Historique sauvegardé dans %s\033[0m\n", filename);
-}
-
-void load_command_history(const char* filename) {
-    FILE* file = fopen(filename, "r");
-    if (file == NULL) {
-        return;
-    }
-    char line[256];
-    while (fgets(line, sizeof(line), file) != NULL) {
-        line[strcspn(line, "\n")] = '\0';
-        store_command(line);
-    }
-    fclose(file);
+void init_repl() {
+    init_database(&db);
+    load_command_history("command_history.txt");
+    load_tree("db_save.txt");
+    printf("Database and command history loaded successfully.\n");
 }
 
 void print_prompt() {
@@ -104,116 +81,93 @@ void print_prompt() {
 
 void read_input(char* buffer, size_t buffer_length) {
     if (fgets(buffer, buffer_length, stdin) == NULL) {
-        printf("\033[31m✗ Erreur lors de la lecture de l'entrée\033[0m\n");
+        printf("\033[31m✗ Error reading input\033[0m\n");
         exit(EXIT_FAILURE);
     }
-    buffer[strlen(buffer) - 1] = '\0';
+    buffer[strcspn(buffer, "\n")] = 0;
 }
 
-int prepare_statement(char* buffer, Statement* statement) {
+int prepare_statement(char* input, Statement* statement) {
     statement->has_where = 0;
 
-    if (strncmp(buffer, "insert", 6) == 0) {
+    if (strncmp(input, "create table", 12) == 0) {
+        statement->type = STATEMENT_CREATE_TABLE;
+        return sscanf(input, "create table %s", statement->table_name) == 1;
+    } else if (strncmp(input, "add column", 10) == 0) {
+        statement->type = STATEMENT_ADD_COLUMN;
+        return sscanf(input, "add column %s %s %s", statement->table_name, statement->column_name, statement->column_type) == 3;
+    } else if (strncmp(input, "insert", 6) == 0) {
         statement->type = STATEMENT_INSERT;
-        int args_assigned = sscanf(buffer, "insert %d %254s", &(statement->id), statement->name);
+        int args_assigned = sscanf(input, "insert %d %254s", &(statement->id), statement->name);
         if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
             return 0;
         }
         return 1;
-    } else if (strncmp(buffer, "select id", 9) == 0) {
-        statement->type = STATEMENT_SELECT_BY_ID;
-        int args_assigned = sscanf(buffer, "select id %d", &(statement->id));
-        if (args_assigned != 1) {
-            return 0;
-        }
-        return 1;
-    } else if (strncmp(buffer, "select", 6) == 0) {
+    } else if (strncmp(input, "select id", 9) == 0) {
+        statement->type = STATEMENT_SELECT_WHERE;
+        return sscanf(input, "select id %d", &(statement->id)) == 1;
+    } else if (strncmp(input, "select", 6) == 0) {
         statement->type = STATEMENT_SELECT;
-        char* where_clause = strstr(buffer, "where");
-        if (where_clause) {
+        char* where = strstr(input, "where");
+        if (where) {
             statement->has_where = 1;
-            int args_assigned = sscanf(where_clause, "where id = %d", &(statement->where_id));
-            if (args_assigned != 1) {
-                return 0;
-            }
+            return sscanf(where, "where id = %d", &(statement->where_id)) == 1;
         }
         return 1;
-    } else if (strncmp(buffer, "delete", 6) == 0) {
-        statement->type = STATEMENT_DELETE;
-        int args_assigned = sscanf(buffer, "delete %d", &(statement->id));
-        if (args_assigned < 1 || statement->id <= 0) {
-            return 0;
-        }
-        return 1;
-    } else if (strncmp(buffer, "update", 6) == 0) {
+    } else if (strncmp(input, "update", 6) == 0) {
         statement->type = STATEMENT_UPDATE;
-        int args_assigned = sscanf(buffer, "update %254s where id = %d", statement->name, &(statement->id));
-        if (args_assigned < 2 || statement->id <= 0 || strlen(statement->name) == 0) {
-            return 0;
-        }
-        return 1;
-    } else if (strcmp(buffer, "help") == 0) {
+        return sscanf(input, "update %254s where id = %d", statement->name, &(statement->id)) == 2;
+    } else if (strncmp(input, "delete", 6) == 0) {
+        statement->type = STATEMENT_DELETE;
+        return sscanf(input, "delete %d", &(statement->id)) == 1;
+    } else if (strcmp(input, "help") == 0) {
         statement->type = STATEMENT_HELP;
         return 1;
-    } else if (strcmp(buffer, "history") == 0) {
+    } else if (strcmp(input, "history") == 0) {
         statement->type = STATEMENT_HISTORY;
         return 1;
-    } else if (strcmp(buffer, "show table") == 0) {
-        statement->type = STATEMENT_SHOW_TABLE;
+    } else if (strcmp(input, "show tables") == 0) {
+        statement->type = STATEMENT_SHOW_TABLES;
+        return 1;
+    } else if (strncmp(input, "save", 4) == 0) {
+        statement->type = STATEMENT_SAVE;
+        return sscanf(input, "save %s", statement->table_name) == 1;
+    } else if (strncmp(input, "load", 4) == 0) {
+        statement->type = STATEMENT_LOAD;
+        return sscanf(input, "load %s", statement->table_name) == 1;
+    } else if (strcmp(input, ".exit") == 0) {
+        statement->type = STATEMENT_EXIT;
         return 1;
     }
-
-    return -1;
-}
-
-void print_help() {
-    printf("\n\033[36m=== Commandes Disponibles ===\033[0m\n");
-    printf("\033[32minsert <id> <name>\033[0m   : Insérer une nouvelle ligne\n");
-    printf("\033[32mselect\033[0m              : Afficher toutes les lignes\n");
-    printf("\033[32mselect id <id>\033[0m      : Sélectionner une ligne avec un ID spécifique\n");
-    printf("\033[32mselect where id = <id>\033[0m : Sélectionner une ligne avec un ID spécifique\n");
-    printf("\033[32mdelete <id>\033[0m         : Supprimer une ligne\n");
-    printf("\033[32mupdate <name> where id = <id>\033[0m  : Mettre à jour une ligne\n");
-    printf("\033[32mshow table\033[0m          : Afficher la structure de la table\n");
-    printf("\033[32mhistory\033[0m             : Afficher l'historique des commandes\n");
-    printf("\033[32m.exit\033[0m               : Sauvegarder et quitter\n");
-    printf("\033[32mhelp\033[0m                : Afficher cette aide\n");
-}
-
-
-void show_table_structure() {
-    printf("\n\033[36m=== Structure de la Table ===\033[0m\n");
-    printf("+------+----------------------+\n");
-    printf("|  ID  | Name                 |\n");
-    printf("+------+----------------------+\n");
+    return 0;
 }
 
 void execute_statement(Statement* statement) {
-    static Table* table = NULL;
-
-    if (table == NULL) {
-        table = create_table();
-    }
-
     switch (statement->type) {
+        case STATEMENT_CREATE_TABLE:
+            create_table(&db, statement->table_name);
+            break;
+        case STATEMENT_ADD_COLUMN:
+            add_column(&db, statement->table_name, statement->column_name, statement->column_type);
+            break;
         case STATEMENT_INSERT:
-            insert_into_table(table, statement->id, statement->name);
+            insert_row(statement->id, statement->name);
             break;
         case STATEMENT_SELECT:
             if (statement->has_where) {
-                select_row_from_table(table, statement->where_id);
+                select_row_by_id(statement->where_id);
             } else {
-                select_all_from_table(table);
+                select_row();
             }
             break;
-        case STATEMENT_SELECT_BY_ID:
-            select_row_from_table(table, statement->id);
-            break;
-        case STATEMENT_DELETE:
-            delete_from_table(table, statement->id);
+        case STATEMENT_SELECT_WHERE:
+            select_row_by_id(statement->id);
             break;
         case STATEMENT_UPDATE:
             update_row(statement->id, statement->name);
+            break;
+        case STATEMENT_DELETE:
+            delete_row(statement->id);
             break;
         case STATEMENT_HELP:
             print_help();
@@ -221,52 +175,50 @@ void execute_statement(Statement* statement) {
         case STATEMENT_HISTORY:
             print_history();
             break;
-        case STATEMENT_SHOW_TABLE:
+        case STATEMENT_SHOW_TABLES:
             show_table_structure();
             break;
-        default:
-            printf("\033[31m✗ Commande non reconnue.\033[0m\n");
+        case STATEMENT_SAVE:
+            save_database(&db, statement->table_name);
             break;
-    }
-}
-
-
-void repl(void) {
-    char buffer[1024];
-    Statement statement;
-
-    printf("-------------------------------------------------\n");
-    printf("\033[32mBienvenue dans la base de données !\033[0m\nTapez 'help' pour voir les commandes.\n");
-    printf("-------------------------------------------------\n");
-
-    load_tree("db_save.txt");
-    load_command_history("command_history.txt");
-
-    while (1) {
-        print_prompt();
-        read_input(buffer, 1024);
-        store_command(buffer);
-
-        if (strcmp(buffer, ".exit") == 0) {
-            printf("Sauvegarde de l'historique...\n");
+        case STATEMENT_LOAD:
+            load_database(&db, statement->table_name);
+            break;
+        case STATEMENT_EXIT:
+            printf("Saving history...\n");
             save_command_history("command_history.txt");
-
-            printf("Sauvegarde de l'arbre...\n");
+            printf("Saving database...\n");
             FILE* file = fopen("db_save.txt", "w");
             assert(file != NULL);
             save_tree(file, root);
             fclose(file);
-            printf("\033 Arbre et historique sauvegardés avec succès.\033[0m\n");
+            printf("\033[32m✓ Database and history saved successfully.\033[0m\n");
             exit(EXIT_SUCCESS);
-        }
+        default:
+            printf("\033[31m✗ Unknown statement type\033[0m\n");
+            break;
+    }
+}
 
-        int result = prepare_statement(buffer, &statement);
-        if (result == 1) {
+void repl() {
+    char input[MAX_INPUT];
+    Statement statement;
+
+    printf("-------------------------------------------------\n");
+    printf("\033[32mWelcome to the database!\033[0m\nType 'help' for available commands.\n");
+    printf("-------------------------------------------------\n");
+
+    init_repl();
+
+    while (1) {
+        print_prompt();
+        read_input(input, sizeof(input));
+        store_command(input);
+
+        if (prepare_statement(input, &statement)) {
             execute_statement(&statement);
-        } else if (result == 0) {
-            printf("\033[31m✗ Erreur de syntaxe ou données invalides\033[0m\n");
         } else {
-            printf("\033[31m✗ Commande non reconnue : '%s'\033[0m\n", buffer);
+            printf("\033[31m✗ Unrecognized statement: %s\033[0m\n", input);
         }
     }
 }

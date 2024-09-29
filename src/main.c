@@ -8,10 +8,8 @@ int main() {
     load_tree("db_save.txt");
     printf("L'arbre est chargé avec succès.\n");
 
-    // Lancer la boucle REPL
     repl();
 
-    // Sauvegarde de l'arbre à la fin du programme
     FILE *file = fopen("db_save.txt", "w");
     if (file != NULL) {
         save_tree(file, root);
@@ -22,6 +20,5 @@ int main() {
     }
     
     printf("--- Fin du programme ---\n");
-    system("pause");  // Utilisez cette ligne uniquement sur Windows
     return 0;
 }
