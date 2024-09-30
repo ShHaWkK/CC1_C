@@ -7,7 +7,7 @@
 void init_repl();
 void print_prompt();
 void read_input(char* buffer, size_t buffer_length);
-void repl();
 
+void repl(void);
 #endif // REPL_H
 

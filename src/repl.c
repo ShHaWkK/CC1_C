@@ -1,4 +1,5 @@
-// File: src/repl.c
+#define _POSIX_C_SOURCE 200809L
+#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,6 +60,13 @@ extern int history_count;
 Database db;
 extern TreeNode* g_root;
 
+// Function prototypes
+char* my_strdup(const char* s);
+void repl(void) __attribute__((unused));
+
+Database db;
+extern TreeNode* g_root;
+
 void init_repl() {
     init_database(&db);
     load_command_history("command_history.txt");
@@ -76,6 +84,16 @@ void read_input(char* buffer, size_t buffer_length) {
         exit(EXIT_FAILURE);
     }
     buffer[strcspn(buffer, "\n")] = 0;
+}
+
+char* trim(char* str) {
+    char* end;
+    while(isspace((unsigned char)*str)) str++;
+    if(*str == 0) return str;
+    end = str + strlen(str) - 1;
+    while(end > str && isspace((unsigned char)*end)) end--;
+    end[1] = '\0';
+    return str;
 }
 
 int prepare_statement(char* input, Statement* statement) {
@@ -101,68 +119,54 @@ int prepare_statement(char* input, Statement* statement) {
     if (from) {
         statement->type = STATEMENT_SELECT_FROM;
         char columns[MAX_INPUT] = {0};
-        sscanf(input, "select %[^from] from %s", columns, statement->table_name);
+        char* table_name_start = from + 5; // Skip "from "
         
-        // Trim leading and trailing spaces from table_name
-        char* end = statement->table_name + strlen(statement->table_name) - 1;
-        while(end > statement->table_name && isspace((unsigned char)*end)) end--;
-        end[1] = '\0';
-        char* start = statement->table_name;
-        while(isspace((unsigned char)*start)) start++;
-        memmove(statement->table_name, start, strlen(start) + 1);
+        // Extract column names
+        size_t column_length = from - (input + 7); // 7 is the length of "select "
+        strncpy(columns, input + 7, column_length);
+        columns[column_length] = '\0';
         
-        // Trim leading and trailing spaces from columns
-        start = columns;
-        while(isspace((unsigned char)*start)) start++;
-        end = start + strlen(start) - 1;
-        while(end > start && isspace((unsigned char)*end)) end--;
-        end[1] = '\0';
+        // Extract table name
+        sscanf(table_name_start, "%s", statement->table_name);
         
-        if (strcmp(start, "*") == 0 || strlen(start) == 0) {
-            statement->num_columns = 0;  // 0 indicates "select *" or "select "
-        } else {
-            char* token = strtok(start, ",");
-            int i = 0;
-            statement->column_names = malloc(MAX_COLUMNS * sizeof(char*));
-            if (statement->column_names == NULL) {
-                return 0;
-            }
-            while (token != NULL && i < MAX_COLUMNS) {
-                statement->column_names[i] = malloc(MAX_NAME_LENGTH * sizeof(char));
-                if (statement->column_names[i] == NULL) {
-                    for (int j = 0; j < i; j++) {
-                        free(statement->column_names[j]);
-                    }
-                    free(statement->column_names);
-                    return 0;
-                }
-                // Trim leading and trailing spaces from each column name
-                char* col_start = token;
-                char* col_end = token + strlen(token) - 1;
-                while(isspace((unsigned char)*col_start)) col_start++;
-                while(col_end > col_start && isspace((unsigned char)*col_end)) col_end--;
-                col_end[1] = '\0';
-                strncpy(statement->column_names[i], col_start, MAX_NAME_LENGTH - 1);
-                statement->column_names[i][MAX_NAME_LENGTH - 1] = '\0';
-                i++;
-                token = strtok(NULL, ",");
-            }
-            statement->num_columns = i;
+        // Process column names
+        char* token = strtok(columns, ",");
+        statement->num_columns = 0;
+        statement->column_names = malloc(MAX_COLUMNS * sizeof(char*));
+        
+        while (token != NULL && statement->num_columns < MAX_COLUMNS) {
+            token = trim(token);
+            statement->column_names[statement->num_columns] = my_strdup(token);
+            statement->num_columns++;
+            token = strtok(NULL, ",");
         }
         
-        char* where = strstr(from, "where");
-        if (where) {
-            statement->has_where = 1;
-            sscanf(where, "where id = %d", &(statement->where_id));
+        // Debug print
+        printf("Debug (prepare_statement): Number of columns: %d\n", statement->num_columns);
+        for (int i = 0; i < statement->num_columns; i++) {
+            printf("Debug (prepare_statement): Column %d: %s\n", i, statement->column_names[i]);
         }
+        printf("Debug (prepare_statement): Table name: %s\n", statement->table_name);
         
         return 1;
     }
     } else if (strncmp(input, "update", 6) == 0) {
         statement->type = STATEMENT_UPDATE;
-        return sscanf(input, "update %s set %s = %s where id = %d", 
+        char value[MAX_NAME_LENGTH];
+        int result = sscanf(input, "update %s set %s = %s where id = %d", 
                       statement->table_name, statement->column_name, 
-                      statement->name, &(statement->id)) == 4;
+                      value, &(statement->id));
+        if (result == 4) {
+            // Remove quotes if present
+            if (value[0] == '\'' || value[0] == '"') {
+                memmove(value, value + 1, strlen(value));
+                value[strlen(value) - 1] = '\0';
+            }
+            strncpy(statement->name, value, MAX_NAME_LENGTH - 1);
+            statement->name[MAX_NAME_LENGTH - 1] = '\0';
+            return 1;
+        }
+        return 0;
     } else if (strncmp(input, "delete", 6) == 0) {
         statement->type = STATEMENT_DELETE;
         return sscanf(input, "delete from %s where id = %d", 
@@ -226,7 +230,7 @@ int prepare_statement(char* input, Statement* statement) {
                 free(statement->column_names);
                 return 0;
             }
-            while (*column == ' ') column++;
+            column = trim(column);
             strncpy(statement->column_names[i], column, MAX_NAME_LENGTH - 1);
             statement->column_names[i][MAX_NAME_LENGTH - 1] = '\0';
             column = strtok(NULL, ",");
@@ -237,7 +241,12 @@ int prepare_statement(char* input, Statement* statement) {
         char* value = strtok(values_start, ",");
         i = 0;
         while (value != NULL && i < MAX_COLUMNS) {
-            while (*value == ' ') value++;
+            value = trim(value);
+            // Remove quotes if present
+            if (value[0] == '\'' || value[0] == '"') {
+                memmove(value, value + 1, strlen(value));
+                value[strlen(value) - 1] = '\0';
+            }
             strncpy(statement->values[i], value, MAX_NAME_LENGTH - 1);
             statement->values[i][MAX_NAME_LENGTH - 1] = '\0';
             value = strtok(NULL, ",");
@@ -255,6 +264,17 @@ int prepare_statement(char* input, Statement* statement) {
     return 0;
 }
 
+
+void free_statement(Statement* statement) {
+    if (statement->column_names != NULL) {
+        for (int i = 0; i < statement->num_columns; i++) {
+            free(statement->column_names[i]);
+        }
+        free(statement->column_names);
+        statement->column_names = NULL;
+    }
+}
+
 void execute_statement(Statement* statement) {
     switch (statement->type) {
         case STATEMENT_CREATE_TABLE:
@@ -270,6 +290,7 @@ void execute_statement(Statement* statement) {
             }
             break;
         case STATEMENT_SELECT:
+        case STATEMENT_SELECT_WHERE:
             if (statement->has_where) {
                 char id_str[20];
                 snprintf(id_str, sizeof(id_str), "%d", statement->where_id);
@@ -280,13 +301,7 @@ void execute_statement(Statement* statement) {
             break;
         case STATEMENT_SELECT_FROM:
             if (statement->num_columns == 0) {
-                if (statement->has_where) {
-                    char id_str[20];
-                    snprintf(id_str, sizeof(id_str), "%d", statement->where_id);
-                    select_where(&db, statement->table_name, "id", id_str);
-                } else {
-                    select_all(&db, statement->table_name);
-                }
+                select_all(&db, statement->table_name);
             } else {
                 select_from(&db, statement->table_name, (const char**)statement->column_names, statement->num_columns);
             }
@@ -329,7 +344,7 @@ void execute_statement(Statement* statement) {
                 insert_into(&db, statement->table_name, column_ptrs, value_ptrs, statement->num_columns);
             }
             break;
-        case STATEMENT_DROP_TABLE:
+                case STATEMENT_DROP_TABLE:
             drop_table(&db, statement->table_name);
             break;
         case STATEMENT_EXIT:
@@ -348,17 +363,7 @@ void execute_statement(Statement* statement) {
     }
 }
 
-void free_statement(Statement* statement) {
-    if (statement->column_names != NULL) {
-        for (int i = 0; i < statement->num_columns; i++) {
-            free(statement->column_names[i]);
-        }
-        free(statement->column_names);
-                statement->column_names = NULL;
-    }
-}
-
-void repl() {
+void repl(void) {
     char input[MAX_INPUT];
     Statement statement;
 

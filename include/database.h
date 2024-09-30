@@ -58,5 +58,7 @@ void select_from(Database* db, const char* table_name, const char** columns, int
 void join_tables(Database* db, const char* table1, const char* table2, const char* join_column);
 void insert_into(Database* db, const char* table_name, char** column_names, char** values, int num_columns);
 void drop_table(Database* db, const char* table_name);
+Table* get_table(Database* db, const char* table_name);
+
 
 #endif

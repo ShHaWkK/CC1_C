@@ -1,5 +1,3 @@
-// File: src/utils.c
-
 #include "../include/utils.h"
 #include "../include/database.h"
 #include <stdio.h>
@@ -19,6 +17,8 @@
 
 char* command_history[MAX_HISTORY];
 int history_count = 0;
+
+char* my_strdup(const char* s);
 
 char* my_strdup(const char* s) {
     size_t len = strlen(s) + 1;
@@ -89,8 +89,6 @@ void print_help() {
     printf("%s| %-37s |%s\n", COLOR_MAGENTA, "select [cols] from <table> [where]", COLOR_RESET);
     printf("%s| %-37s |%s\n", COLOR_MAGENTA, "update <table> set <col> = <val>", COLOR_RESET);
     printf("%s| %-37s |%s\n", COLOR_MAGENTA, "delete from <table> where id = <id>", COLOR_RESET);
-    printf("%s| %-37s |%s\n", COLOR_MAGENTA, "help", COLOR_RESET);
-    printf("%s| %-37s |%s\n", COLOR_MAGENTA, "history", COLOR_RESET);
     printf("%s| %-37s |%s\n", COLOR_MAGENTA, "show tables", COLOR_RESET);
     printf("%s| %-37s |%s\n", COLOR_MAGENTA, "show columns <table>", COLOR_RESET);
     printf("%s| %-37s |%s\n", COLOR_MAGENTA, "join <table1> <table2> on <column>", COLOR_RESET);
@@ -98,6 +96,8 @@ void print_help() {
     printf("%s| %-37s |%s\n", COLOR_MAGENTA, "load <filename>", COLOR_RESET);
     printf("%s| %-37s |%s\n", COLOR_MAGENTA, "INSERT INTO <table> (cols) VALUES", COLOR_RESET);
     printf("%s| %-37s |%s\n", COLOR_MAGENTA, "DROP TABLE <table>", COLOR_RESET);
+    printf("%s| %-37s |%s\n", COLOR_MAGENTA, "help", COLOR_RESET);
+    printf("%s| %-37s |%s\n", COLOR_MAGENTA, "history", COLOR_RESET);
     printf("%s| %-37s |%s\n", COLOR_MAGENTA, ".exit", COLOR_RESET);
     printf("%s+---------------------------------------+%s\n", COLOR_MAGENTA, COLOR_RESET);
 }

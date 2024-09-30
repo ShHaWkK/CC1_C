@@ -3,6 +3,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+Table* get_table(Database* db, const char* table_name);
+
+
+
+Table* get_table(Database* db, const char* table_name) {
+    for (int i = 0; i < db->num_tables; i++) {
+        if (strcmp(db->tables[i].name, table_name) == 0) {
+            return &db->tables[i];
+        }
+    }
+    return NULL;
+}
+
+
 void init_database(Database* db) {
     db->num_tables = 0;
 }
@@ -317,21 +331,29 @@ void load_database(Database* db, const char* filename) {
     // Lire le nombre de tables
     fread(&db->num_tables, sizeof(int), 1, file);
     
+    printf("Debug (load_database): Number of tables to load: %d\n", db->num_tables);
+    
     // Pour chaque table
     for (int i = 0; i < db->num_tables; i++) {
         Table* table = &db->tables[i];
         
         // Lire le nom de la table
         fread(table->name, sizeof(char), MAX_NAME_LENGTH, file);
+        printf("Debug (load_database): Reading table name: %s\n", table->name);
         
         // Lire le nombre de colonnes et de lignes
         fread(&table->num_columns, sizeof(int), 1, file);
         fread(&table->num_rows, sizeof(int), 1, file);
         
+        printf("Debug (load_database): Table %d: %s, Columns: %d, Rows: %d\n", 
+               i, table->name, table->num_columns, table->num_rows);
+        
         // Lire les informations sur les colonnes
         for (int j = 0; j < table->num_columns; j++) {
             fread(table->columns[j].name, sizeof(char), MAX_NAME_LENGTH, file);
             fread(table->columns[j].type, sizeof(char), 20, file);
+            printf("Debug (load_database): Column %d: %s (%s)\n", 
+                   j, table->columns[j].name, table->columns[j].type);
         }
         
         // Lire les données des lignes
@@ -375,6 +397,12 @@ void show_columns(Database* db, const char* table_name) {
 }
 
 void select_from(Database* db, const char* table_name, const char** columns, int num_columns) {
+    printf("Debug (select_from): Table name: %s\n", table_name);
+    printf("Debug (select_from): Number of columns: %d\n", num_columns);
+    for (int i = 0; i < num_columns; i++) {
+        printf("Debug (select_from): Column %d: %s\n", i, columns[i]);
+    }
+
     Table* table = NULL;
     for (int i = 0; i < db->num_tables; i++) {
         if (strcmp(db->tables[i].name, table_name) == 0) {
@@ -382,18 +410,18 @@ void select_from(Database* db, const char* table_name, const char** columns, int
             break;
         }
     }
-    
+
     if (table == NULL) {
-        printf("\033[31mError: Table '%s' not found.\033[0m\n", table_name);
+        printf("Table '%s' not found.\n", table_name);
         return;
     }
-    
+
     int* column_indices = malloc(num_columns * sizeof(int));
     if (column_indices == NULL) {
-        printf("\033[31mError: Memory allocation failed.\033[0m\n");
+        printf("Memory allocation failed.\n");
         return;
     }
-    
+
     for (int i = 0; i < num_columns; i++) {
         column_indices[i] = -1;
         for (int j = 0; j < table->num_columns; j++) {
@@ -403,45 +431,29 @@ void select_from(Database* db, const char* table_name, const char** columns, int
             }
         }
         if (column_indices[i] == -1) {
-            printf("\033[31mError: Column '%s' not found in table '%s'.\033[0m\n", columns[i], table_name);
+            printf("Column '%s' not found in table '%s'.\n", columns[i], table_name);
             free(column_indices);
             return;
         }
     }
-    
+
     // Print header
-    printf("+");
     for (int i = 0; i < num_columns; i++) {
-        printf("--------------------+");
-    }
-    printf("\n|");
-    for (int i = 0; i < num_columns; i++) {
-        printf(" %-18s |", columns[i]);
-    }
-    printf("\n+");
-    for (int i = 0; i < num_columns; i++) {
-        printf("--------------------+");
+        printf("%-20s", columns[i]);
     }
     printf("\n");
 
     // Print data
     for (int i = 0; i < table->num_rows; i++) {
-        printf("|");
         for (int j = 0; j < num_columns; j++) {
-            printf(" %-18s |", table->rows[i].values[column_indices[j]]);
+            printf("%-20s", table->rows[i].values[column_indices[j]]);
         }
         printf("\n");
     }
-    
-    // Print footer
-    printf("+");
-    for (int i = 0; i < num_columns; i++) {
-        printf("--------------------+");
-    }
-    printf("\n");
-    
+
     free(column_indices);
 }
+
 
 void join_tables(Database* db, const char* table1, const char* table2, const char* join_column) {
     Table* t1 = NULL;
