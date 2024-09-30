@@ -92,22 +92,39 @@ void select_all(Database* db, const char* table_name) {
     }
     
     if (table == NULL) {
-        printf("\033[31mError: Table '%s' not found.\033[0m\n", table_name);
+        printf("Error: Table '%s' not found.\n", table_name);
         return;
     }
     
-    printf("\033[1m\033[36mContents of table '%s':\033[0m\n", table_name);
+    printf("+");
     for (int i = 0; i < table->num_columns; i++) {
-        printf("\033[1m%-20s\033[0m", table->columns[i].name);
+        printf("--------------------+");
+    }
+    printf("\n|");
+    
+    for (int i = 0; i < table->num_columns; i++) {
+        printf(" %-18s |", table->columns[i].name);
+    }
+    printf("\n+");
+    
+    for (int i = 0; i < table->num_columns; i++) {
+        printf("--------------------+");
     }
     printf("\n");
-    
+
     for (int i = 0; i < table->num_rows; i++) {
+        printf("|");
         for (int j = 0; j < table->num_columns; j++) {
-            printf("%-20s", table->rows[i].values[j]);
+            printf(" %-18s |", table->rows[i].values[j]);
         }
         printf("\n");
     }
+    
+    printf("+");
+    for (int i = 0; i < table->num_columns; i++) {
+        printf("--------------------+");
+    }
+    printf("\n");
 }
 
 void select_where(Database* db, const char* table_name, const char* column_name, const char* value) {
@@ -137,20 +154,37 @@ void select_where(Database* db, const char* table_name, const char* column_name,
         return;
     }
     
-    printf("\033[1m\033[36mRows in table '%s' where %s = %s:\033[0m\n", table_name, column_name, value);
+    printf("+");
     for (int i = 0; i < table->num_columns; i++) {
-        printf("\033[1m%-20s\033[0m", table->columns[i].name);
+        printf("--------------------+");
+    }
+    printf("\n|");
+    
+    for (int i = 0; i < table->num_columns; i++) {
+        printf(" %-18s |", table->columns[i].name);
+    }
+    printf("\n+");
+    
+    for (int i = 0; i < table->num_columns; i++) {
+        printf("--------------------+");
     }
     printf("\n");
     
     for (int i = 0; i < table->num_rows; i++) {
         if (strcmp(table->rows[i].values[column_index], value) == 0) {
+            printf("|");
             for (int j = 0; j < table->num_columns; j++) {
-                printf("%-20s", table->rows[i].values[j]);
+                printf(" %-18s |", table->rows[i].values[j]);
             }
             printf("\n");
         }
     }
+    
+    printf("+");
+    for (int i = 0; i < table->num_columns; i++) {
+        printf("--------------------+");
+    }
+    printf("\n");
 }
 
 void update_row(Database* db, const char* table_name, int row_id, const char* column_name, const char* new_value) {
@@ -241,9 +275,35 @@ void save_database(Database* db, const char* filename) {
         return;
     }
     
-    fwrite(db, sizeof(Database), 1, file);
-    fclose(file);
+    // Écrire le nombre de tables
+    fwrite(&db->num_tables, sizeof(int), 1, file);
     
+    // Pour chaque table
+    for (int i = 0; i < db->num_tables; i++) {
+        Table* table = &db->tables[i];
+        
+        // Écrire le nom de la table
+        fwrite(table->name, sizeof(char), MAX_NAME_LENGTH, file);
+        
+        // Écrire le nombre de colonnes et de lignes
+        fwrite(&table->num_columns, sizeof(int), 1, file);
+        fwrite(&table->num_rows, sizeof(int), 1, file);
+        
+        // Écrire les informations sur les colonnes
+        for (int j = 0; j < table->num_columns; j++) {
+            fwrite(table->columns[j].name, sizeof(char), MAX_NAME_LENGTH, file);
+            fwrite(table->columns[j].type, sizeof(char), 20, file);
+        }
+        
+        // Écrire les données des lignes
+        for (int j = 0; j < table->num_rows; j++) {
+            for (int k = 0; k < table->num_columns; k++) {
+                fwrite(table->rows[j].values[k], sizeof(char), MAX_NAME_LENGTH, file);
+            }
+        }
+    }
+    
+    fclose(file);
     printf("\033[32mDatabase saved to '%s' successfully.\033[0m\n", filename);
 }
 
@@ -254,11 +314,38 @@ void load_database(Database* db, const char* filename) {
         return;
     }
     
-    fread(db, sizeof(Database), 1, file);
-    fclose(file);
+    // Lire le nombre de tables
+    fread(&db->num_tables, sizeof(int), 1, file);
     
+    // Pour chaque table
+    for (int i = 0; i < db->num_tables; i++) {
+        Table* table = &db->tables[i];
+        
+        // Lire le nom de la table
+        fread(table->name, sizeof(char), MAX_NAME_LENGTH, file);
+        
+        // Lire le nombre de colonnes et de lignes
+        fread(&table->num_columns, sizeof(int), 1, file);
+        fread(&table->num_rows, sizeof(int), 1, file);
+        
+        // Lire les informations sur les colonnes
+        for (int j = 0; j < table->num_columns; j++) {
+            fread(table->columns[j].name, sizeof(char), MAX_NAME_LENGTH, file);
+            fread(table->columns[j].type, sizeof(char), 20, file);
+        }
+        
+        // Lire les données des lignes
+        for (int j = 0; j < table->num_rows; j++) {
+            for (int k = 0; k < table->num_columns; k++) {
+                fread(table->rows[j].values[k], sizeof(char), MAX_NAME_LENGTH, file);
+            }
+        }
+    }
+    
+    fclose(file);
     printf("\033[32mDatabase loaded from '%s' successfully.\033[0m\n", filename);
 }
+
 
 void show_tables(Database* db) {
     printf("\033[1m\033[36mTables in the database:\033[0m\n");
@@ -287,7 +374,7 @@ void show_columns(Database* db, const char* table_name) {
     }
 }
 
-void select_from(Database* db, const char* table_name, char** columns, int num_columns) {
+void select_from(Database* db, const char* table_name, const char** columns, int num_columns) {
     Table* table = NULL;
     for (int i = 0; i < db->num_tables; i++) {
         if (strcmp(db->tables[i].name, table_name) == 0) {
@@ -302,7 +389,6 @@ void select_from(Database* db, const char* table_name, char** columns, int num_c
     }
     
     int* column_indices = malloc(num_columns * sizeof(int));
-
     if (column_indices == NULL) {
         printf("\033[31mError: Memory allocation failed.\033[0m\n");
         return;
@@ -323,18 +409,36 @@ void select_from(Database* db, const char* table_name, char** columns, int num_c
         }
     }
     
-    printf("\033[1m\033[36mSelected columns from table '%s':\033[0m\n", table_name);
+    // Print header
+    printf("+");
     for (int i = 0; i < num_columns; i++) {
-        printf("\033[1m%-20s\033[0m", columns[i]);
+        printf("--------------------+");
+    }
+    printf("\n|");
+    for (int i = 0; i < num_columns; i++) {
+        printf(" %-18s |", columns[i]);
+    }
+    printf("\n+");
+    for (int i = 0; i < num_columns; i++) {
+        printf("--------------------+");
     }
     printf("\n");
-    
+
+    // Print data
     for (int i = 0; i < table->num_rows; i++) {
+        printf("|");
         for (int j = 0; j < num_columns; j++) {
-            printf("%-20s", table->rows[i].values[column_indices[j]]);
+            printf(" %-18s |", table->rows[i].values[column_indices[j]]);
         }
         printf("\n");
     }
+    
+    // Print footer
+    printf("+");
+    for (int i = 0; i < num_columns; i++) {
+        printf("--------------------+");
+    }
+    printf("\n");
     
     free(column_indices);
 }

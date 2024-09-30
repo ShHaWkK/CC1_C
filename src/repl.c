@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
 #include "../include/database.h"
 #include "../include/repl.h"
 #include "../include/utils.h"
@@ -49,7 +50,7 @@ typedef struct {
     int where_id;
     int has_where;
     int num_columns;
-    char* column_names[MAX_COLUMNS];
+    char** column_names;
 } Statement;
 
 extern char* command_history[MAX_HISTORY];
@@ -80,17 +81,7 @@ void read_input(char* buffer, size_t buffer_length) {
 int prepare_statement(char* input, Statement* statement) {
     statement->has_where = 0;
     statement->num_columns = 0;
-
-    for (int i = 0; i < MAX_COLUMNS; i++) {
-        statement->column_names[i] = malloc(MAX_NAME_LENGTH * sizeof(char));
-        if (statement->column_names[i] == NULL) {
-            for (int j = 0; j < i; j++) {
-                free(statement->column_names[j]);
-            }
-            return 0;
-        }
-        strcpy(statement->column_names[i], "");
-    }
+    statement->column_names = NULL;
 
     if (strncmp(input, "create table", 12) == 0) {
         statement->type = STATEMENT_CREATE_TABLE;
@@ -106,40 +97,67 @@ int prepare_statement(char* input, Statement* statement) {
         }
         return 1;
     } else if (strncmp(input, "select", 6) == 0) {
-        char* from = strstr(input, "from");
-        if (from) {
-            statement->type = STATEMENT_SELECT_FROM;
-            char columns[MAX_INPUT];
-            sscanf(input, "select %[^from] from %s", columns, statement->table_name);
-            
-            // Check if it's "select *"
-            if (strcmp(columns, "*") == 0) {
-                statement->num_columns = 0;  // 0 indicates "select *"
-            } else {
-                char* token = strtok(columns, ",");
-                int i = 0;
-                while (token != NULL && i < MAX_COLUMNS) {
-                    while (*token == ' ') token++; 
-                    char* end = token + strlen(token) - 1;
-                    while (end > token && *end == ' ') end--;
-                    *(end + 1) = '\0';
-                    strcpy(statement->column_names[i], token);
-                    i++;
-                    token = strtok(NULL, ",");
-                }
-                statement->num_columns = i;
-            }
-            return 1;
+    char* from = strstr(input, "from");
+    if (from) {
+        statement->type = STATEMENT_SELECT_FROM;
+        char columns[MAX_INPUT] = {0};
+        sscanf(input, "select %[^from] from %s", columns, statement->table_name);
+        
+        // Trim leading and trailing spaces from table_name
+        char* end = statement->table_name + strlen(statement->table_name) - 1;
+        while(end > statement->table_name && isspace((unsigned char)*end)) end--;
+        end[1] = '\0';
+        char* start = statement->table_name;
+        while(isspace((unsigned char)*start)) start++;
+        memmove(statement->table_name, start, strlen(start) + 1);
+        
+        // Trim leading and trailing spaces from columns
+        start = columns;
+        while(isspace((unsigned char)*start)) start++;
+        end = start + strlen(start) - 1;
+        while(end > start && isspace((unsigned char)*end)) end--;
+        end[1] = '\0';
+        
+        if (strcmp(start, "*") == 0 || strlen(start) == 0) {
+            statement->num_columns = 0;  // 0 indicates "select *" or "select "
         } else {
-            statement->type = STATEMENT_SELECT;
-            sscanf(input, "select %s", statement->table_name);
-            char* where = strstr(input, "where");
-            if (where) {
-                statement->has_where = 1;
-                sscanf(where, "where id = %d", &(statement->where_id));
+            char* token = strtok(start, ",");
+            int i = 0;
+            statement->column_names = malloc(MAX_COLUMNS * sizeof(char*));
+            if (statement->column_names == NULL) {
+                return 0;
             }
-            return 1;
+            while (token != NULL && i < MAX_COLUMNS) {
+                statement->column_names[i] = malloc(MAX_NAME_LENGTH * sizeof(char));
+                if (statement->column_names[i] == NULL) {
+                    for (int j = 0; j < i; j++) {
+                        free(statement->column_names[j]);
+                    }
+                    free(statement->column_names);
+                    return 0;
+                }
+                // Trim leading and trailing spaces from each column name
+                char* col_start = token;
+                char* col_end = token + strlen(token) - 1;
+                while(isspace((unsigned char)*col_start)) col_start++;
+                while(col_end > col_start && isspace((unsigned char)*col_end)) col_end--;
+                col_end[1] = '\0';
+                strncpy(statement->column_names[i], col_start, MAX_NAME_LENGTH - 1);
+                statement->column_names[i][MAX_NAME_LENGTH - 1] = '\0';
+                i++;
+                token = strtok(NULL, ",");
+            }
+            statement->num_columns = i;
         }
+        
+        char* where = strstr(from, "where");
+        if (where) {
+            statement->has_where = 1;
+            sscanf(where, "where id = %d", &(statement->where_id));
+        }
+        
+        return 1;
+    }
     } else if (strncmp(input, "update", 6) == 0) {
         statement->type = STATEMENT_UPDATE;
         return sscanf(input, "update %s set %s = %s where id = %d", 
@@ -194,8 +212,23 @@ int prepare_statement(char* input, Statement* statement) {
         char* column = strtok(columns_start + 1, ",");
         int i = 0;
         while (column != NULL && i < MAX_COLUMNS) {
+            if (i == 0) {
+                statement->column_names = malloc(MAX_COLUMNS * sizeof(char*));
+                if (statement->column_names == NULL) {
+                    return 0;
+                }
+            }
+            statement->column_names[i] = malloc(MAX_NAME_LENGTH * sizeof(char));
+            if (statement->column_names[i] == NULL) {
+                for (int j = 0; j < i; j++) {
+                    free(statement->column_names[j]);
+                }
+                free(statement->column_names);
+                return 0;
+            }
             while (*column == ' ') column++;
-            strcpy(statement->column_names[i], column);
+            strncpy(statement->column_names[i], column, MAX_NAME_LENGTH - 1);
+            statement->column_names[i][MAX_NAME_LENGTH - 1] = '\0';
             column = strtok(NULL, ",");
             i++;
         }
@@ -205,7 +238,8 @@ int prepare_statement(char* input, Statement* statement) {
         i = 0;
         while (value != NULL && i < MAX_COLUMNS) {
             while (*value == ' ') value++;
-            strcpy(statement->values[i], value);
+            strncpy(statement->values[i], value, MAX_NAME_LENGTH - 1);
+            statement->values[i][MAX_NAME_LENGTH - 1] = '\0';
             value = strtok(NULL, ",");
             i++;
         }
@@ -246,9 +280,15 @@ void execute_statement(Statement* statement) {
             break;
         case STATEMENT_SELECT_FROM:
             if (statement->num_columns == 0) {
-                select_all(&db, statement->table_name);
+                if (statement->has_where) {
+                    char id_str[20];
+                    snprintf(id_str, sizeof(id_str), "%d", statement->where_id);
+                    select_where(&db, statement->table_name, "id", id_str);
+                } else {
+                    select_all(&db, statement->table_name);
+                }
             } else {
-                select_from(&db, statement->table_name, statement->column_names, statement->num_columns);
+                select_from(&db, statement->table_name, (const char**)statement->column_names, statement->num_columns);
             }
             break;
         case STATEMENT_UPDATE:
@@ -309,8 +349,12 @@ void execute_statement(Statement* statement) {
 }
 
 void free_statement(Statement* statement) {
-    for (int i = 0; i < MAX_COLUMNS; i++) {
-        free(statement->column_names[i]);
+    if (statement->column_names != NULL) {
+        for (int i = 0; i < statement->num_columns; i++) {
+            free(statement->column_names[i]);
+        }
+        free(statement->column_names);
+                statement->column_names = NULL;
     }
 }
 
