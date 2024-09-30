@@ -3,12 +3,9 @@
 #include <string.h>
 #include <assert.h>
 #include "../include/btree.h"
+#include "../include/database.h"
 
-TreeNode* root = NULL;
-
-void insert_row(int id, const char* name) {
-    root = insert_in_tree(root, id, name); 
-}
+TreeNode* g_root = NULL;
 
 TreeNode* create_node(int id, const char* name) {
     assert(id > 0 && name != NULL);
@@ -42,52 +39,6 @@ TreeNode* insert_in_tree(TreeNode* node, int id, const char* name) {
         node->right = insert_in_tree(node->right, id, name);
     }
     return node;
-}
-
-void traverse_tree(TreeNode* node) {
-    if (node == NULL) return;
-    traverse_tree(node->left);
-    printf("| %4d | %-20s |\n", node->id, node->name);
-    traverse_tree(node->right);
-}
-
-void select_row_by_id(int id) {
-    TreeNode* node = search_row(id);
-    if (node == NULL) {
-        printf("No row found with ID %d.\n", id);
-    } else {
-        printf("+------+----------------------+\n");
-        printf("|  ID  | Name                 |\n");
-        printf("+------+----------------------+\n");
-        printf("| %4d | %-20s |\n", node->id, node->name);
-        printf("+------+----------------------+\n");
-    }
-}
-
-void select_row() {
-    if (root == NULL) {
-        printf("No rows found.\n");
-    } else {
-        printf("+------+----------------------+\n");
-        printf("|  ID  | Name                 |\n");
-        printf("+------+----------------------+\n");
-        traverse_tree(root);
-        printf("+------+----------------------+\n");
-    }
-}
-
-TreeNode* search_row(int id) {
-    TreeNode* current = root;
-    while (current != NULL) {
-        if (id == current->id) {
-            return current;
-        } else if (id < current->id) {
-            current = current->left;
-        } else {
-            current = current->right;
-        }
-    }
-    return NULL;
 }
 
 TreeNode* find_min(TreeNode* node) {
@@ -124,21 +75,21 @@ TreeNode* delete_node(TreeNode* root, int id) {
     return root;
 }
 
-void delete_row(int id) {
-    assert(id > 0);
-    root = delete_node(root, id);
-    printf("Deleted row with ID %d\n", id);
+TreeNode* search_node(TreeNode* root, int id) {
+    if (root == NULL || root->id == id) {
+        return root;
+    }
+    if (id < root->id) {
+        return search_node(root->left, id);
+    }
+    return search_node(root->right, id);
 }
 
-void update_row(int id, const char* new_name) {
-    TreeNode* node = search_row(id);
-    if (node == NULL) {
-        printf("No row found with ID %d.\n", id);
-    } else {
-        strncpy(node->name, new_name, MAX_NAME_LENGTH - 1);
-        node->name[MAX_NAME_LENGTH - 1] = '\0';
-        printf("Updated row with ID %d to name %s\n", id, new_name);
-    }
+void traverse_tree(TreeNode* node) {
+    if (node == NULL) return;
+    traverse_tree(node->left);
+    printf("| %4d | %-20s |\n", node->id, node->name);
+    traverse_tree(node->right);
 }
 
 void save_tree(FILE *file, TreeNode *node) {
@@ -148,16 +99,26 @@ void save_tree(FILE *file, TreeNode *node) {
     save_tree(file, node->right);
 }
 
-void load_tree(const char *filename) {
+TreeNode* load_tree(const char *filename) {
     FILE *file = fopen(filename, "r");
-    if (file == NULL) return;
+    if (file == NULL) return NULL;
 
+    TreeNode* root = NULL;
     int id;
     char name[MAX_NAME_LENGTH];
 
     while (fscanf(file, "%d %s", &id, name) != EOF) {
-        insert_row(id, name);
+        root = insert_in_tree(root, id, name);
     }
 
     fclose(file);
+    return root;
+}
+
+void inorder_traversal(TreeNode* root) {
+    if (root != NULL) {
+        inorder_traversal(root->left);
+        printf("| %4d | %-20s |\n", root->id, root->name);
+        inorder_traversal(root->right);
+    }
 }

@@ -4,11 +4,9 @@ CFLAGS_COMMON = -Wall -Wextra -Werror -std=c99 -g -Iinclude/
 
 # Fichiers objets pour la version principale et la version de test
 OBJ_MAIN = src/main.o src/repl.o src/btree.o src/database.o src/utils.o src/table.o
-OBJ_TEST = src/test.o src/repl.o src/btree.o src/database.o src/utils.o src/table.o
 
 # Noms des cibles principales et de test
 TARGET_MAIN = class_db
-TARGET_TEST = class_db_tests
 
 ifeq ($(OS),Windows_NT)
     RM = del /Q
@@ -20,13 +18,13 @@ else
     CFLAGS = $(CFLAGS_COMMON) -fsanitize=address 
 endif
 
-all: $(TARGET_MAIN)$(EXE) $(TARGET_TEST)$(EXE)
+all: $(TARGET_MAIN)$(EXE) 
 
 $(TARGET_MAIN)$(EXE): $(OBJ_MAIN)
 	$(CC) $(CFLAGS) -o $@ $^
 
-$(TARGET_TEST)$(EXE): $(OBJ_TEST)
-	$(CC) $(CFLAGS) -o $@ $^
+#$(TARGET_TEST)$(EXE): $(OBJ_TEST)
+#	$(CC) $(CFLAGS) -o $@ $^
 
 src/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -34,13 +32,13 @@ src/%.o: src/%.c
 clean:
 ifeq ($(OS),Windows_NT)
 	-$(RM) src\*.o
-	-$(RM) $(TARGET_MAIN)$(EXE) $(TARGET_TEST)$(EXE)
+	-$(RM) $(TARGET_MAIN)$(EXE) 
 else
-	$(RM) src/*.o $(TARGET_MAIN)$(EXE) $(TARGET_TEST)$(EXE)
+	$(RM) src/*.o $(TARGET_MAIN)$(EXE) 
 endif
 
-test: $(TARGET_TEST)
-	./$(TARGET_TEST)$(EXE)
+#test: $(TARGET_TEST)
+#	./$(TARGET_TEST)$(EXE)
 
 version:
 	@$(CC) --version

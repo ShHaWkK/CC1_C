@@ -1,12 +1,4 @@
-/*
-*   ------------------------------------------------------------------------------------------------------------
-*   Fichier : database.h
-*   Auteur : ShHawk
-*   Date : 29/09/2024
-*   Description : Contient les structures et les prototypes de fonctions pour la gestion d'une base de données et  la manipulation des tables
-*   ------------------------------------------------------------------------------------------------------------
-*/
-
+// database.h
 #ifndef DATABASE_H
 #define DATABASE_H
 
@@ -14,10 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_TABLES 10
+#define MAX_NAME_LENGTH 255
 #define MAX_COLUMNS 10
 #define MAX_ROWS 100
-#define MAX_NAME_LENGTH 255
+#define MAX_TABLES 10
+
+typedef struct TreeNode {
+    int id;
+    char name[MAX_NAME_LENGTH];
+    struct TreeNode* left;
+    struct TreeNode* right;
+} TreeNode;
 
 typedef struct {
     char name[MAX_NAME_LENGTH];
@@ -34,7 +33,9 @@ typedef struct {
     Row rows[MAX_ROWS];
     int num_columns;
     int num_rows;
+    TreeNode* root; 
 } Table;
+
 
 typedef struct {
     Table tables[MAX_TABLES];

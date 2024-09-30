@@ -2,28 +2,15 @@
 #define TABLE_H
 
 #include "btree.h"
+#include "database.h"
 
-typedef struct Table {
-    TreeNode* root;  // Arbre binaire des lignes
-    int row_count;   // Nombre total de lignes dans la table
-} Table;
+void create_table(Database* db, const char* table_name);
+void insert_into_table(Database* db, const char* table_name, int id, const char* name);
+void select_all_from_table(Database* db, const char* table_name);
+void select_row_from_table(Database* db, const char* table_name, int id);
+void delete_from_table(Database* db, const char* table_name, int id);
 
-// Fonction pour créer une table
-Table* create_table();
-
-// Fonction pour insérer une ligne dans la table
-void insert_into_table(Table* table, int id, const char* name);
-
-// Fonction pour afficher toutes les lignes
-void select_all_from_table(Table* table);
-
-// Fonction pour rechercher une ligne par ID
-void select_row_from_table(Table* table, int id);
-
-// Fonction pour supprimer une ligne par ID
-void delete_from_table(Table* table, int id);
-
-// Persistance des données
+// Ces fonctions peuvent rester inchangées
 void save_table(Table* table, const char* filename);
 void load_table(Table* table, const char* filename);
 

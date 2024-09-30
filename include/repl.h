@@ -1,12 +1,13 @@
 #ifndef REPL_H
 #define REPL_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../include/btree.h"
+#include "database.h"
+#include "btree.h"
 
-// Fonction pour lancer la boucle REPL
-void repl(void);
+void init_repl();
+void print_prompt();
+void read_input(char* buffer, size_t buffer_length);
+void repl();
 
-#endif
+#endif // REPL_H
+
