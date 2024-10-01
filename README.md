@@ -46,43 +46,46 @@ The most important things for me are
 rendu : 17/11 23h59
 
 
-## Structure du Projet 
+## Description du Projet
 
-Ce projet implémente une base de données simple utilisant une structure d'arbre binaire pour stocker des lignes avec des commandes de type SQL. 
-
-Il permet d'effectuer des opérations de base telles que l'insertion, la sélection, la suppression et la recherche de données. 
-
-De plus, il offre une **persistance des données sur disque**  pour garantir que les informations sont conservées.
-
- - **Commandes de base** comme `insert`, `select`, `delete` et `search` disponibles dans un environnement REPL
- - **Sortie colorée** : J'ai mis des couleurs pour avoir une interface utilisateur pour **améliorer l'expérience utilisateur** (par exemple, vert pour les insertions réussies, rouge pour les erreurs).
-
-## Commandes disponibles dans le REPL
-
-| Commande | Syntaxe | Exemple | Description |
-|----------|---------|---------|-------------|
-| Insérer | `insert <id> <nom>` | `insert 1 Alice` | Ajoute une nouvelle ligne |
-| Sélectionner tout | `select` | `select` | Affiche toutes les lignes |
-| Sélectionner par ID | `select id <id>` | `select id 1` | Affiche une ligne spécifique |
-| Supprimer | `delete <id>` | `delete 1` | Supprime une ligne |
-| Mettre à jour | `update <nom> where id = <id>` | `update Bob where id = 1` | Met à jour une ligne |
-| Afficher la structure | `show table` | `show table` | Montre la structure de la table |
-| Historique | `history` | `history` | Affiche l'historique des commandes |
-| Aide | `help` | `help` | Affiche l'aide |
-| Quitter | `.exit` | `.exit` | Sauvegarde et quitte le programme |
+Ce projet implémente un système de gestion de base de données avancé utilisant une structure d'arbre binaire pour un stockage efficace des données. Il offre une interface en ligne de commande (REPL) robuste avec des fonctionnalités étendues, une persistance des données, et des mécanismes de sécurité.
 
 ## Structure du Projet
 
-- **src/** : Contient les fichiers source
+- **src/**
+  - `main.c` : Point d'entrée du programme
   - `btree.c` : Implémentation de l'arbre binaire
   - `repl.c` : Interface en ligne de commande (REPL)
-  - `utils.c` : Fonctions utilitaires
-- **include/** : Contient les fichiers d'en-tête
-  - `btree.h`
-  - `utils.h`
-- **tests/** : Tests unitaires et d'intégration
-- **Makefile** : Pour la compilation et les tests
-- `db_save.txt` : Fichier de persistance des données
+  - `database.c` : Opérations avancées de base de données
+  - `utils.c` : Fonctions utilitaires et de sécurité
+  - `table.c` : Gestion avancée des tables
+- **include/**
+  - Fichiers d'en-tête correspondants (.h)
+- **Makefile** : Compilation, tests, et outils d'analyse
+- `db_save.txt` : Persistance des données
+- `command_history.txt` : Historique des commandes
+
+## Commandes disponibles dans le REPL
+
+| Commande | Description | Exemples |
+|----------|-------------|----------|
+| `create table <table_name>` | Crée une nouvelle table | `create table users`<br>`create table products` |
+| `add column <table> <column> <type>` | Ajoute une colonne à une table existante | `add column users email varchar(255)`<br>`add column products price float` |
+| `insert <id> <name>` | Insère une nouvelle entrée avec ID et nom | `insert 1 John`<br>`insert 2 Alice` |
+| `select [cols] from <table> [where]` | Sélectionne des données d'une table | `select * from users`<br>`select name, age from users where age > 18`<br>`select * from products where price < 100` |
+| `update <table> set <col> = <val>` | Met à jour des données dans une table | `update users set age = 30 where id = 1`<br>`update products set stock = 0 where price > 1000` |
+| `delete from <table> where id = <id>` | Supprime une entrée d'une table | `delete from users where id = 5`<br>`delete from products where stock = 0` |
+| `show tables` | Affiche la liste des tables | `show tables` |
+| `show columns <table>` | Affiche les colonnes d'une table | `show columns users`<br>`show columns products` |
+| `join <table1> <table2> on <column>` | Effectue une jointure entre deux tables | `join users orders on users.id = orders.user_id`<br>`join products categories on products.category_id = categories.id` |
+| `save <filename>` | Sauvegarde la base de données dans un fichier | `save mydb.dat`<br>`save mydb.dat` |
+| `load <filename>` | Charge une base de données depuis un fichier | `load mydb.dat`<br>`load mydb.dat` |
+| `INSERT INTO <table> (cols) VALUES` | Insère des données dans une table (syntaxe SQL) | `INSERT INTO users (name, age) VALUES ('Alice', 25)`<br>`INSERT INTO products (name, price) VALUES ('Laptop', 999.99)` |
+| `DROP TABLE <table>` | Supprime une table | `DROP TABLE table_name`<br>`DROP TABLE table_name` |
+| `help` | Affiche l'aide | `help` |
+| `history` | Affiche l'historique des commandes | `history` |
+| `.exit` | Quitte le programme | `.exit` |
+
 
 ### Compilation
 ```bash
