@@ -69,19 +69,19 @@ Ce projet implémente un système de gestion de base de données avancé utilisa
 
 | Commande | Description | Exemples |
 |----------|-------------|----------|
-| `create table <table_name>` | Crée une nouvelle table | `create table users`<br>`create table products` |
-| `add column <table> <column> <type>` | Ajoute une colonne à une table existante | `add column users email varchar(255)`<br>`add column products price float` |
+| `create table <table_name>` | Crée une nouvelle table | `create table users`<br>`create table orders` |
+| `add column <table> <column> <type>` | Ajoute une colonne à une table existante | `add column users id int`<br>`add column users name string`<br> `add column users age int`<br>`add column orders id int ` <br>`add column orders user_id int `<br> `add column orders product string` |
 | `insert <id> <name>` | Insère une nouvelle entrée avec ID et nom | `insert 1 John`<br>`insert 2 Alice` |
-| `select [cols] from <table> [where]` | Sélectionne des données d'une table | `select * from users`<br>`select name, age from users where age > 18`<br>`select * from products where price < 100` |
-| `update <table> set <col> = <val>` | Met à jour des données dans une table | `update users set age = 30 where id = 1`<br>`update products set stock = 0 where price > 1000` |
-| `delete from <table> where id = <id>` | Supprime une entrée d'une table | `delete from users where id = 5`<br>`delete from products where stock = 0` |
+| `select [cols] from <table> [where]` | Sélectionne des données d'une table | `select * from users`<br>`select * from users where id = 2`<br> `select name, age from users` |
+| `update <table> set <col> = <val>` | Met à jour des données dans une table | `update users set age = 31 where id = 1`|
+| `delete from <table> where id = <id>` | Supprime une entrée d'une table | `delete from users where id = 3` |
 | `show tables` | Affiche la liste des tables | `show tables` |
-| `show columns <table>` | Affiche les colonnes d'une table | `show columns users`<br>`show columns products` |
-| `join <table1> <table2> on <column>` | Effectue une jointure entre deux tables | `join users orders on users.id = orders.user_id`<br>`join products categories on products.category_id = categories.id` |
-| `save <filename>` | Sauvegarde la base de données dans un fichier | `save mydb.dat`<br>`save mydb.dat` |
-| `load <filename>` | Charge une base de données depuis un fichier | `load mydb.dat`<br>`load mydb.dat` |
-| `INSERT INTO <table> (cols) VALUES` | Insère des données dans une table (syntaxe SQL) | `INSERT INTO users (name, age) VALUES ('Alice', 25)`<br>`INSERT INTO products (name, price) VALUES ('Laptop', 999.99)` |
-| `DROP TABLE <table>` | Supprime une table | `DROP TABLE table_name`<br>`DROP TABLE table_name` |
+| `show columns <table>` | Affiche les colonnes d'une table | `show columns users`<br>`show columns orders` |
+| `join <table1> <table2> on <column>` | Effectue une jointure entre deux tables | `join users orders on id `|
+| `save <filename>` | Sauvegarde la base de données dans un fichier | `save mydb.txt` |
+| `load <filename>` | Charge une base de données depuis un fichier | `load mydb.txt` |
+| `INSERT INTO <table> (cols) VALUES` | Insère des données dans une table (syntaxe SQL) | `INSERT INTO users (id, name, age) VALUES (1, John, 30)`<br>`INSERT INTO users (id, name, age) VALUES (2, Alice, 25)`<br>`INSERT INTO users (id, name, age) VALUES (3, Bob, 35)`<br> `INSERT INTO orders (id, user_id, product) VALUES (1, 1, laptop) ` <br> `INSERT INTO orders (id, user_id, product) VALUES (2, 2, phone) `   |
+| `DROP TABLE <table>` | Supprime une table | `DROP TABLE table_name`<br>`DROP TABLE orders` |
 | `help` | Affiche l'aide | `help` |
 | `history` | Affiche l'historique des commandes | `history` |
 | `.exit` | Quitte le programme | `.exit` |
