@@ -1,3 +1,21 @@
+/*
+*   Author:     ShHawk
+*   Date:       26/09/2024
+*   Fichier :  btree.c
+*- ------------------------------------------------------------------------------------------------------------------
+*   Explications des fonctions rapidement : 
+*       - create_node : Crée un nouveau noeud avec un id et un nom donné
+*       - insert_in_tree : Insère un noeud dans l'arbre
+*       - find_min : Trouve le noeud le plus petit
+*       - delete_node : Supprime un noeud
+*       - search_node : Cherche un noeud
+*       - traverse_tree : Parcours l'arbre
+*       - save_tree : Sauvegarde l'arbre dans un fichier
+*       - load_tree : Charge l'arbre depuis un fichier
+*       - inorder_traversal : Parcours l'arbre
+*---------------------------------------------------------------------------------------------------------------------
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
