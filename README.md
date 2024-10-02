@@ -109,16 +109,16 @@ make
 > La fonction `prepare_statement` est très importante parce qu'elle détermine comment les commandes de l'utilisateur sont interprétées. Une erreur ici pourrait conduire à une mauvaise exécution des commandes ou à des comportements inattendus du programme.
 
 > [!NOTE]
-> - ```execute_statement``` : Cette fonction est le cœur de l'exécution des commandes dans notre système de base de données.
+> - ```execute_statement``` : Cette fonction est le cœur de l'exécution des commandes dans notre base de données.
 >   
->   - Elle utilise une structure `switch` pour identifier le type de commande à exécuter. Cette approche permet une extensibilité facile : ajouter une nouvelle commande ne nécessite que l'ajout d'un nouveau cas dans le switch.
+>   - Elle utilise une structure `switch` pour identifier le type de commande à exécuter. Je trouve que c'est la méthode "facile" à gérer : ajouter une nouvelle commande ne nécessite que l'ajout d'un nouveau cas dans le switch.
 >   
 >   - Pour chaque type de commande, elle appelle une fonction spécifique de la base de données :
 >     
->     - `STATEMENT_CREATE_TABLE` : Crée une nouvelle table dans la base de données.
+>     - `STATEMENT_CREATE_TABLE` : Crée une nouvelle table dans la base de données.<br>
 >       Exemple : `create table users` créerait une nouvelle table nommée "users".
 >     
->     - `STATEMENT_ADD_COLUMN` : Ajoute une nouvelle colonne à une table existante.
+>     - `STATEMENT_ADD_COLUMN` : Ajoute une nouvelle colonne à une table existante.<br>
 >       Exemple : `add column users age INT` ajouterait une colonne "age" de type entier à la table "users".
 >     
 >     - `STATEMENT_INSERT` : Insère une nouvelle ligne de données dans une table.
@@ -127,10 +127,10 @@ make
 >     - `STATEMENT_SELECT` et `STATEMENT_SELECT_WHERE` : Récupère des données de la base.
 >       La différence entre les deux est la présence d'une condition WHERE pour filtrer les résultats.
 >     
->     - `STATEMENT_UPDATE` : Modifie des données existantes dans une table.
+>     - `STATEMENT_UPDATE` : Modifie des données existantes dans une table.<br>
 >       Exemple : `update users set age = 30 where id = 1` mettrait à jour l'âge de l'utilisateur avec l'ID 1.
 >     
->     - `STATEMENT_DELETE` : Supprime des lignes d'une table.
+>     - `STATEMENT_DELETE` : Supprime des lignes d'une table.<br>
 >       Exemple : `delete from users where id = 1` supprimerait l'utilisateur avec l'ID 1.
 >     
 >     - `STATEMENT_JOIN` : Combine des données de deux tables différentes.
@@ -149,8 +149,8 @@ make
 >   - La fonction prend en paramètres la structure de la base de données et le nom du fichier à charger.
 >   - Elle lit probablement le fichier et reconstruit les structures de données de la base de données avec les informations sauvegardées.
 >   
->   - La commande EXIT est particulière :
->     Elle assure que toutes les données sont sauvegardées avant de quitter le programme.
+>   - La commande EXIT est un peu "particulière" :
+>     Elle **assure** que toutes les données sont sauvegardées avant de quitter le programme.
 >     Cela inclut l'historique des commandes et l'état actuel de la base de données.
 >   
 >   - La gestion des erreurs est cruciale :
