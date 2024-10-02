@@ -122,6 +122,29 @@ Pourquoi cette idée ?
 >Les données sont sauvegardées automatiquement à la sortie du programme
 >L'historique des commandes est également sauvegardé
 
+
+## Fichier database.c : Fonctions intéressantes
+
+> [!NOTE]
+> - ```create_table``` : Cette fonction **initialise** une nouvelle table dans la base de données avec un nom donné. Elle **ajoute** la table à la liste des tables de la base de données.
+> 
+> - ```add_column``` : Cette fonction **ajoute** une nouvelle colonne à une table existante. Elle **spécifie** le nom et le type de données de la colonne.
+> 
+> - ```insert_row``` : Cette fonction **insère** une nouvelle ligne de données dans une table spécifiée. Elle **copie** chaque valeur fournie dans la nouvelle ligne.
+> 
+> - ```select_where``` : Cette fonction **filtre et affiche** les lignes d'une table qui correspondent à une condition spécifique sur une colonne donnée.
+
+> [!IMPORTANT]
+> Dans toutes ces fonctions, il est crucial de **vérifier les limites** (nombre maximum de tables, colonnes, lignes) pour éviter les débordements. De plus, les noms et valeurs sont généralement **tronqués** s'ils dépassent la longueur maximale autorisée.
+
+> [!NOTE]
+> - ```save_database``` : Cette fonction **persiste** la structure et les données de la base de données dans un fichier binaire sur le disque.
+> 
+> - ```load_database``` : Cette fonction **reconstruit** la base de données à partir d'un fichier sauvegardé, chargeant toutes les structures de tables, les informations sur les colonnes et les données des lignes.
+
+> [!IMPORTANT]
+> Le format de fichier utilisé est **spécifique à cette implémentation**. Il n'est pas nécessairement compatible avec d'autres systèmes de bases de données. Assurez-vous que les **permissions de fichier** sont correctes pour l'écriture et la lecture.
+
 >[!Note]
 **Sécurité**
 - Validation des entrées pour prévenir les **débordements de tampon**
