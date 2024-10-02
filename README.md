@@ -97,6 +97,81 @@ make
 
 ## Explications
 
+### fichier repl.c : 
+> [!NOTE]
+> - ```prepare_statement``` : Cette fonction **analyse** l'entrée de l'utilisateur pour déterminer le type de commande et extraire les paramètres pertinents.
+>   - Elle utilise une série de `if` et `else if` pour comparer le début de la chaîne d'entrée avec des commandes connues.
+>   - Pour chaque type de commande, elle utilise `sscanf` pour extraire les paramètres de la chaîne d'entrée.
+>   - Pour les commandes comme "INSERT INTO", elle effectue une analyse manuelle de la chaîne pour extraire les noms de colonnes et les valeurs.
+>   - Elle alloue dynamiquement de la mémoire pour les noms de colonnes dans le cas de commandes comme "SELECT" ou "INSERT INTO".
+
+> [!IMPORTANT]
+> La fonction `prepare_statement` est très importante parce qu'elle détermine comment les commandes de l'utilisateur sont interprétées. Une erreur ici pourrait conduire à une mauvaise exécution des commandes ou à des comportements inattendus du programme.
+
+> [!NOTE]
+> - ```execute_statement``` : Cette fonction est le cœur de l'exécution des commandes dans notre système de base de données.
+>   
+>   - Elle utilise une structure `switch` pour identifier le type de commande à exécuter. Cette approche permet une extensibilité facile : ajouter une nouvelle commande ne nécessite que l'ajout d'un nouveau cas dans le switch.
+>   
+>   - Pour chaque type de commande, elle appelle une fonction spécifique de la base de données :
+>     
+>     - `STATEMENT_CREATE_TABLE` : Crée une nouvelle table dans la base de données.
+>       Exemple : `create table users` créerait une nouvelle table nommée "users".
+>     
+>     - `STATEMENT_ADD_COLUMN` : Ajoute une nouvelle colonne à une table existante.
+>       Exemple : `add column users age INT` ajouterait une colonne "age" de type entier à la table "users".
+>     
+>     - `STATEMENT_INSERT` : Insère une nouvelle ligne de données dans une table.
+>       Cette fonction prépare les données sous forme de tableau avant de les insérer.
+>     
+>     - `STATEMENT_SELECT` et `STATEMENT_SELECT_WHERE` : Récupère des données de la base.
+>       La différence entre les deux est la présence d'une condition WHERE pour filtrer les résultats.
+>     
+>     - `STATEMENT_UPDATE` : Modifie des données existantes dans une table.
+>       Exemple : `update users set age = 30 where id = 1` mettrait à jour l'âge de l'utilisateur avec l'ID 1.
+>     
+>     - `STATEMENT_DELETE` : Supprime des lignes d'une table.
+>       Exemple : `delete from users where id = 1` supprimerait l'utilisateur avec l'ID 1.
+>     
+>     - `STATEMENT_JOIN` : Combine des données de deux tables différentes.
+>       C'est une opération plus complexe qui permet de relier des informations de plusieurs tables.
+>     
+>     - `STATEMENT_SAVE` et `STATEMENT_LOAD` : Gèrent la persistance de la base de données.
+>       Ces commandes permettent de sauvegarder l'état actuel de la base ou de restaurer un état précédent.
+>     - `save_database` : Cette fonction **persiste** l'état actuel de la base de données dans un fichier.
+>   - Elle est appelée lorsque l'utilisateur entre une commande "save [filename]".
+>   - La fonction prend en paramètres la structure de la base de données et le nom du fichier où sauvegarder.
+>   - Elle utilise probablement des opérations d'écriture de fichier pour stocker les structures de données et leur contenu.
+
+> [!NOTE]
+> - `load_database` : Cette fonction **restaure** l'état de la base de données à partir d'un fichier sauvegardé.
+>   - Elle est appelée lorsque l'utilisateur entre une commande "load [filename]".
+>   - La fonction prend en paramètres la structure de la base de données et le nom du fichier à charger.
+>   - Elle lit probablement le fichier et reconstruit les structures de données de la base de données avec les informations sauvegardées.
+>   
+>   - La commande EXIT est particulière :
+>     Elle assure que toutes les données sont sauvegardées avant de quitter le programme.
+>     Cela inclut l'historique des commandes et l'état actuel de la base de données.
+>   
+>   - La gestion des erreurs est cruciale :
+>     Si une commande n'est pas reconnue, un message d'erreur est affiché.
+>     Cela évite les crashs du programme et informe l'utilisateur du problème.
+> [!NOTE]
+> - ```repl``` : Cette fonction est la **boucle principale** du programme, implémentant le modèle Read-Eval-Print Loop.
+>   - Elle initialise d'abord la base de données et l'historique des commandes.
+>   - Ensuite, elle entre dans une boucle infinie où elle :
+>     1. Affiche un prompt
+>     2. Lit l'entrée de l'utilisateur
+>     3. Stocke la commande dans l'historique
+>     4. Prépare la déclaration
+>     5. Exécute la déclaration si elle est valide
+>     6. Libère la mémoire allouée pour la déclaration
+>   - Si la préparation de la déclaration échoue, elle affiche un message d'erreur.
+
+> [!IMPORTANT]
+> La boucle REPL est le cœur du programme. Elle gère toute l'interaction avec l'utilisateur et assure que chaque commande est traitée correctement. La gestion des erreurs et la libération de la mémoire sont cruciales ici pour maintenir la stabilité du programme sur le long terme.
+
+
 ### Fichier btree.c : 
 
 ### Fonction pour delete : 
