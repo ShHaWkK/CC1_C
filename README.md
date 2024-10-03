@@ -179,11 +179,12 @@ make
 > - ```find_min``` : Cette fonction **cherche** le nœud avec la plus petite valeur dans un sous-arbre en se déplaçant vers la gauche jusqu'à ce qu'il n'y ait plus de nœuds à gauche.
 > - ```delete_node```: Cette fonction **supprime** un nœud d'un arbre binaire de recherche. 
 > Elle gère trois cas : si le nœud a aucun enfant, un enfant, ou deux enfants. Si le nœud a deux enfants, elle remplace le nœud à supprimer par le plus petit nœud de son sous-arbre droit  et supprime ce successeur.
-Un peu plus expliqué si pas trop compris : 
--  **3 cas de suppression :**
-    - Pas d'enfants : On supprime simplement le nœud en renvoyant NULL.
-    - Un enfant : On renvoie le sous-arbre qui contient cet enfant.
-    - Deux enfants : On ne peut pas simplement supprimer le nœud car cela casserait la structure de l'arbre. On le remplace donc par son successeur logique, qui est le nœud ayant la plus petite valeur dans son sous-arbre droit (trouvé avec `find_min`).
+- Un peu plus Explicatif concernant la fonction delete_node :  
+> [!IMPORTANT]
+>-  **3 cas de suppression :**
+>    - Pas d'enfants : On supprime simplement le nœud en renvoyant NULL.
+>    - Un enfant : On renvoie le sous-arbre qui contient cet enfant.
+>    - Deux enfants : On ne peut pas simplement supprimer le nœud car cela casserait la structure de l'arbre. On le remplace donc par son successeur logique, qui est le nœud ayant la plus petite valeur dans son sous-arbre droit (trouvé avec `find_min`).
 
 Pourquoi cette idée ?
 
