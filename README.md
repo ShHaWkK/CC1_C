@@ -186,12 +186,6 @@ make
 >    - Un enfant : On renvoie le sous-arbre qui contient cet enfant.
 >    - Deux enfants : On ne peut pas simplement supprimer le nœud car cela casserait la structure de l'arbre. On le remplace donc par son successeur logique, qui est le nœud ayant la plus petite valeur dans son sous-arbre droit (trouvé avec `find_min`).
 
-Pourquoi cette idée ?
-
-> [!IMPORTANT]
-> Quand on supprime un nœud avec deux enfants, **on ne peut pas simplement le retirer sans casser la structure de l'arbre**. 
-> La solution est de **remplacer** ce nœud par son "successeur logique" - le plus petit élément plus grand que lui.
-
 ### Fonction `insert_in_tree`
 > [!Note]
 > La fonction d'insertion gère l'ajout d'un nouveau nœud tout en maintenant l'équilibre de l'arbre.
