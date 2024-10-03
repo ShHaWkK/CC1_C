@@ -186,9 +186,10 @@ Pourquoi cette idée ?
 > Quand on supprime un nœud avec deux enfants, **on ne peut pas simplement le retirer sans casser la structure de l'arbre**. 
 > La solution est de **remplacer** ce nœud par son "successeur logique" - le plus petit élément plus grand que lui.
 
-### Fonction pour insert 
+### Fonction `insert_in_tree`
 > [!Note]
 > La fonction d'insertion gère l'ajout d'un nouveau nœud tout en maintenant l'équilibre de l'arbre.
+ En comparant l'ID, on détermine si le nouveau nœud doit être placé à gauche ou à droite. j'ai utilisé une fonction récursive simplifie "l'algorithme", car chaque appel traite une sous-partie de l'arbre jusqu'à ce qu'on trouve la position pour insérer le nouveau nœud.
 
 
 > [!IMPORTANT]
@@ -197,6 +198,14 @@ Pourquoi cette idée ?
 >Les données sont sauvegardées automatiquement à la sortie du programme
 >L'historique des commandes est également sauvegardé
 
+
+### Fonction `create_node`
+Pourquoi cette idée ?
+>[!IMPORTANT]
+> **Pourquoi utiliser assert ?** : 
+> - Nous utilisons assert pour **garantir que l'ID est positif et que le nom n'est pas nul.**
+>    Contrôle de la taille du nom : Limiter la taille du nom avec MAX_NAME_LENGTH évite les débordements de tampon (buffer overflow), qui sont des vulnérabilités.
+>    Allocation dynamique : Nous allouons de la mémoire pour un nouveau nœud. Si l'allocation échoue, cela renvoie NULL et signalons l'erreur à l'utilisateur.
 
 ## Fichier database.c : Fonctions intéressantes
 
