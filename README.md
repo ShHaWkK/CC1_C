@@ -160,12 +160,12 @@ make
 > - ```repl``` : Cette fonction est la **boucle principale** du programme, implémentant le modèle Read-Eval-Print Loop.
 >   - Elle initialise d'abord la base de données et l'historique des commandes.
 >   - Ensuite, elle entre dans une boucle infinie où elle :
->     1. Affiche un prompt
->     2. Lit l'entrée de l'utilisateur
->     3. Stocke la commande dans l'historique
->     4. Prépare la déclaration
->     5. Exécute la déclaration si elle est valide
->     6. Libère la mémoire allouée pour la déclaration
+>     Affiche un prompt
+>     Lit l'entrée de l'utilisateur
+>     Stocke la commande dans l'historique
+>     Prépare la déclaration
+>     Exécute la déclaration si elle est valide
+>     Libère la mémoire allouée pour la déclaration
 >   - Si la préparation de la déclaration échoue, elle affiche un message d'erreur.
 
 > [!IMPORTANT]
