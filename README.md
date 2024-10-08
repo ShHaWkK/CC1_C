@@ -1,5 +1,8 @@
 # CC1_C
 
+### Author 
+- ShHaWkK (alias Alexandre UZAN)
+
 ## Exam condition
 
 ### Conditions of exam
