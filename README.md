@@ -234,8 +234,9 @@ C'est utile lors de la suppression de nœuds ayant deux enfants (voir plus bas),
 > 
 > - ```load_database``` : Cette fonction **reconstruit** la base de données à partir d'un fichier sauvegardé, chargeant toutes les structures de tables, les informations sur les colonnes et les données des lignes.
 
-> [!IMPORTANT]
-> Le format de fichier utilisé est **spécifique à cette implémentation**. Il n'est pas nécessairement compatible avec d'autres systèmes de bases de données. Assurez-vous que les **permissions de fichier** sont correctes pour l'écriture et la lecture.
+### Outils
+### Bonus : fuzzers + valgrind 
+
 
 >[!Note]
 **Sécurité**
