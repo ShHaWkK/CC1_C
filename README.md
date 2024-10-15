@@ -236,9 +236,21 @@ C'est utile lors de la suppression de nœuds ayant deux enfants (voir plus bas),
 
 ### Outils
 ### Bonus : fuzzers + valgrind 
-
-
->[!Note]
-**Sécurité**
-- Validation des entrées pour prévenir les **débordements de tampon**
-- Utilisation de **strncpy** pour des **copies de chaînes sécurisées**
+Tout d'abord, veuillez intaller les outils : 
+pour valgrind : 
+```
+sudo apt-get install valgrind
+```
+Ainsi que pour fuzzers : 
+```
+sudo apt-get install fuzz
+```
+Puis vous pouvez mettre les commandes suivantes 
+Valgrind : 
+```
+make valgrind
+```
+Fuzzers : 
+```
+make fuzz
+```
