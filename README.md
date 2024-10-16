@@ -259,7 +259,8 @@ make fuzz
 
 ### Incompatibilité entre ASan et Valgrind
 
-J'ai découvert une incompatibilité entre Address Sanitizer (ASan) et Valgrind. Il est nécessaire de compiler le programme sans les options ASan pour utiliser Valgrind, car ce dernier possède son propre système de détection des erreurs de mémoire. Cette incompatibilité s'explique par le fait que les deux outils instrumentent les allocations mémoire de manière différente, ce qui peut conduire à des conflits.
+J'ai découvert une incompatibilité entre Address Sanitizer (ASan) et Valgrind.  il était nécessaire de compiler le programme sans les options ASan, car Valgrind possède son propre système pour détecter les erreurs de mémoire, ce qui entre en conflit avec ASan. 
+Cette incompatibilité s'explique par le fait que les deux outils instrumentent les allocations mémoire de manière différente, ce qui peut conduire à des conflits.
 
 ### Solution pour AFL++
 
