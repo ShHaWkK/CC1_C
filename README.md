@@ -254,3 +254,20 @@ Fuzzers :
 ```
 make fuzz
 ```
+
+## Problèmes Rencontrés avec AFL++ et Valgrind
+
+### Incompatibilité entre ASan et Valgrind
+
+J'ai découvert une incompatibilité entre Address Sanitizer (ASan) et Valgrind. Il est nécessaire de compiler le programme sans les options ASan pour utiliser Valgrind, car ce dernier possède son propre système de détection des erreurs de mémoire. Cette incompatibilité s'explique par le fait que les deux outils instrumentent les allocations mémoire de manière différente, ce qui peut conduire à des conflits.
+
+### Solution pour AFL++
+
+Pour AFL++, j'ai rencontré des problèmes liés à la taille de la mémoire allouée pour la bitmap de couverture. 
+La solution a été d'augmenter la taille de AFL_MAP_SIZE. Par exemple :
+```bash
+AFL_MAP_SIZE=1000000 make run_fuzzer
+```
+Cette augmentation de la taille de la map permet à AFL++ de stocker plus d'informations sur la couverture du code, ce qui peut être nécessaire pour des programmes plus complexes ou avec beaucoup de chemins d'exécution.
+
+J'ai passé beaucoup de temps à comprendre que  Valgrind et AFL++ ne sont pas conçus pour être utilisés ensemble, mais plutôt de manière indépendante
