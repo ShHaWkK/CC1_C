@@ -272,3 +272,6 @@ AFL_MAP_SIZE=1000000 make run_fuzzer
 Cette augmentation de la taille de la map permet à AFL++ de stocker plus d'informations sur la couverture du code, ce qui peut être nécessaire pour des programmes plus complexes ou avec beaucoup de chemins d'exécution.
 
 J'ai passé beaucoup de temps à comprendre que  Valgrind et AFL++ ne sont pas conçus pour être utilisés ensemble, mais plutôt de manière indépendante
+
+![image](https://github.com/user-attachments/assets/3091b649-052b-4d68-ab82-19f85d8da6c5)
+
