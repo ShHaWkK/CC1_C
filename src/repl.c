@@ -114,7 +114,7 @@ int prepare_statement(char* input, Statement* statement) {
             return 0;
         }
         return 1;
-    } else if (strncmp(input, "select", 6) == 0) {
+    }else if (strncmp(input, "select", 6) == 0) {
     char* from = strstr(input, "from");
     if (from) {
         statement->type = STATEMENT_SELECT_FROM;
@@ -130,27 +130,37 @@ int prepare_statement(char* input, Statement* statement) {
         sscanf(table_name_start, "%s", statement->table_name);
         
         // Process column names
-        char* token = strtok(columns, ",");
-        statement->num_columns = 0;
-        statement->column_names = malloc(MAX_COLUMNS * sizeof(char*));
-        
-        while (token != NULL && statement->num_columns < MAX_COLUMNS) {
-            token = trim(token);
-            statement->column_names[statement->num_columns] = my_strdup(token);
-            statement->num_columns++;
-            token = strtok(NULL, ",");
+        if (strncmp(columns, "*", 1) == 0) {
+            statement->num_columns = 0; // 0 indicates all columns
+        } else {
+            char* token = strtok(columns, ",");
+            statement->num_columns = 0;
+            statement->column_names = malloc(MAX_COLUMNS * sizeof(char*));
+            
+            while (token != NULL && statement->num_columns < MAX_COLUMNS) {
+                token = trim(token);
+                statement->column_names[statement->num_columns] = my_strdup(token);
+                statement->num_columns++;
+                token = strtok(NULL, ",");
+            }
         }
         
         // Debug print
         printf("Debug (prepare_statement): Number of columns: %d\n", statement->num_columns);
-        for (int i = 0; i < statement->num_columns; i++) {
-            printf("Debug (prepare_statement): Column %d: %s\n", i, statement->column_names[i]);
+        if (statement->num_columns > 0) {
+            for (int i = 0; i < statement->num_columns; i++) {
+                printf("Debug (prepare_statement): Column %d: %s\n", i, statement->column_names[i]);
+            }
+        } else {
+            printf("Debug (prepare_statement): Selecting all columns\n");
         }
         printf("Debug (prepare_statement): Table name: %s\n", statement->table_name);
         
         return 1;
     }
-    } else if (strncmp(input, "update", 6) == 0) {
+}
+
+else if (strncmp(input, "update", 6) == 0) {
         statement->type = STATEMENT_UPDATE;
         char value[MAX_NAME_LENGTH];
         int result = sscanf(input, "update %s set %s = %s where id = %d", 
@@ -300,12 +310,13 @@ void execute_statement(Statement* statement) {
             }
             break;
         case STATEMENT_SELECT_FROM:
-            if (statement->num_columns == 0) {
-                select_all(&db, statement->table_name);
-            } else {
-                select_from(&db, statement->table_name, (const char**)statement->column_names, statement->num_columns);
-            }
-            break;
+   		 if (statement->num_columns == 0) {
+       	 select_all(&db, statement->table_name);
+   		 } else {
+       		 select_from(&db, statement->table_name, (const char**)statement->column_names, statement->num_columns);
+   		 }
+   	 break;
+
         case STATEMENT_UPDATE:
             update_row(&db, statement->table_name, statement->id, statement->column_name, statement->name);
             break;
