@@ -98,6 +98,22 @@ make
 ./class_db.exe
 ```
 
+### Outils
+### Bonus : valgrind 
+Tout d'abord, veuillez intaller l'outil : 
+pour valgrind : 
+
+```
+sudo apt-get install valgrind
+
+```
+
+Puis vous pouvez mettre la commande suivante Valgrind : 
+```
+make valgrind
+```
+
+
 ## Explications
 
 ### fichier repl.c : 
@@ -234,27 +250,6 @@ C'est utile lors de la suppression de nœuds ayant deux enfants (voir plus bas),
 > 
 > - ```load_database``` : Cette fonction **reconstruit** la base de données à partir d'un fichier sauvegardé, chargeant toutes les structures de tables, les informations sur les colonnes et les données des lignes.
 
-### Outils
-### Bonus : fuzzers + valgrind 
-Tout d'abord, veuillez intaller les outils : 
-pour valgrind : 
-```
-sudo apt-get install valgrind
-```
-Ainsi que pour fuzzers : 
-```
-sudo apt-get install fuzz
-```
-Puis vous pouvez mettre les commandes suivantes 
-Valgrind : 
-```
-make valgrind
-```
-Fuzzers : 
-```
-make fuzz
-```
-
 ## Problèmes Rencontrés avec AFL++ et Valgrind
 
 ### Incompatibilité entre ASan et Valgrind
@@ -273,5 +268,6 @@ Cette augmentation de la taille de la map permet à AFL++ de stocker plus d'info
 
 J'ai passé beaucoup de temps à comprendre que  Valgrind et AFL++ ne sont pas conçus pour être utilisés ensemble, mais plutôt de manière indépendante
 
+Au final j'ai juste utilisé **Valgrind**
 ![image](https://github.com/user-attachments/assets/3091b649-052b-4d68-ab82-19f85d8da6c5)
 
