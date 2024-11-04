@@ -100,7 +100,7 @@ make
 
 ### Outils
 ### Bonus : valgrind 
-Tout d'abord, veuillez intaller l'outil : 
+Tout d'abord, veuillez installer l'outil : 
 pour valgrind : 
 
 ```
@@ -118,14 +118,14 @@ make valgrind
 
 ### fichier repl.c : 
 > [!NOTE]
-> - ```prepare_statement``` : Cette fonction **analyse** l'entrée de l'utilisateur pour déterminer le type de commande et extraire les paramètres pertinents.
->   - Elle utilise une série de `if` et `else if` pour comparer le début de la chaîne d'entrée avec des commandes connues.
+> - ```prepare_statement``` : Cette fonction **analyse** l'entrée de l'utilisateur pour déterminer le type de commande et extraire les paramètres.
+>   - Elle utilise une série de `if` et `else if` pour comparer le début de la chaîne d'entrée avec des commandes.
 >   - Pour chaque type de commande, elle utilise `sscanf` pour extraire les paramètres de la chaîne d'entrée.
->   - Pour les commandes comme "INSERT INTO", elle effectue une analyse manuelle de la chaîne pour extraire les noms de colonnes et les valeurs.
+>   - Pour les commandes comme "INSERT INTO", elle effectue une analyse **manuelle de la chaîne pour extraire les noms de colonnes et les valeurs**.
 >   - Elle alloue dynamiquement de la mémoire pour les noms de colonnes dans le cas de commandes comme "SELECT" ou "INSERT INTO".
 
 > [!IMPORTANT]
-> La fonction `prepare_statement` est très importante parce qu'elle détermine comment les commandes de l'utilisateur sont interprétées. Une erreur ici pourrait conduire à une mauvaise exécution des commandes ou à des comportements inattendus du programme.
+> La fonction `prepare_statement` est très importante parce qu'elle détermine comment les commandes de l'utilisateur sont interprétées. 
 
 > [!NOTE]
 > - ```execute_statement``` : Cette fonction est le cœur de l'exécution des commandes dans notre base de données.
@@ -166,11 +166,7 @@ make valgrind
 > - `load_database` : Cette fonction **restaure** l'état de la base de données à partir d'un fichier sauvegardé.
 >   - Elle est appelée lorsque l'utilisateur entre une commande "load [filename]".
 >   - La fonction prend en paramètres la structure de la base de données et le nom du fichier à charger.
->   - Elle lit probablement le fichier et reconstruit les structures de données de la base de données avec les informations sauvegardées.
->   
->   - La commande EXIT est un peu "particulière" :
->     Elle **assure** que toutes les données sont sauvegardées avant de quitter le programme.
->     Cela inclut l'historique des commandes et l'état actuel de la base de données.
+>   - Elle lit  le fichier et reconstruit les structures de données de la base de données avec les informations sauvegardées.
 >   
 >   - La gestion des erreurs est cruciale :
 >     Si une commande n'est pas reconnue, un message d'erreur est affiché.
