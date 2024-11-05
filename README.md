@@ -98,6 +98,8 @@ make
 ./class_db.exe
 ```
 
+
+
 ### Outils
 ### Bonus : valgrind 
 Tout d'abord, veuillez installer l'outil : 
@@ -108,11 +110,19 @@ sudo apt-get install valgrind
 
 ```
 
-Puis vous pouvez mettre la commande suivante Valgrind : 
+Puis vous pouvez mettre les commandes suivantes pour Valgrind : 
+
+Si vous avez déjà compilé votre code avec `make`, commencez par nettoyer les fichiers précédents :
+ˋˋˋbash
+make clean
+ˋˋˋ
+ensuite la commande suivante pour lancer le Valgrind : 
 ```
 make valgrind
 ```
-
+> [!IMPORTANT]
+> valgrind sert à quoi ? 
+> il va permettre d’analyser le programme et de détecter d’éventuelles erreurs de mémoire.
 
 ## Explications
 
