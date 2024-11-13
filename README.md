@@ -2,7 +2,7 @@
 
 ### Author 
 - ShHaWkK (alias Alexandre UZAN)
-
+------------------------------------------------------------------------------------
 ## Exam condition
 
 ### Conditions of exam
@@ -47,7 +47,7 @@ The most important things for me are
 – Disk persistence is quite easy and should not be too hard
 
 rendu : 17/11 23h59
-
+--------------------------------------------------------------------------------------
 
 ## Description du Projet
 
@@ -70,11 +70,17 @@ Ce projet implémente un système de gestion de base de données avancé utilisa
 
 ## Commandes disponibles dans le REPL
 
+Petite information : 
+
+Avant de faire la commande `.exit` pour sauvegarder la base de données, faites cette commande : `save database.txt` ou `save database.dat` sinon la base de donnée ne se sauvegardera pas. 
+Ensuite, vous pouvez faire `.exit`. 
+Pour charger la base de données, utilisez `load Le_nom_du_fichier.txt` ou `load Le_nom_du_fichier.dat` . 
+L'avantage est que vous pouvez avoir plusieurs bases de données différentes.
+
 | Commande | Description | Exemples |
 |----------|-------------|----------|
 | `create table <table_name>` | Crée une nouvelle table | `create table users`<br>`create table orders` |
 | `add column <table> <column> <type>` | Ajoute une colonne à une table existante | `add column users id int`<br>`add column users name string`<br> `add column users age int`<br>`add column orders id int ` <br>`add column orders user_id int `<br> `add column orders product string` |
-| `insert <id> <name>` | Insère une nouvelle entrée avec ID et nom | `insert 1 John`<br>`insert 2 Alice` |
 | `select [cols] from <table> [where]` | Sélectionne des données d'une table | `select * from users`<br>`select * from users where id = 2`<br> `select name, age from users` |
 | `update <table> set <col> = <val>` | Met à jour des données dans une table | `update users set age = 31 where id = 1`|
 | `delete from <table> where id = <id>` | Supprime une entrée d'une table | `delete from users where id = 3` |
@@ -97,7 +103,6 @@ make
 ```bash
 ./class_db.exe
 ```
-
 
 
 ### Outils
